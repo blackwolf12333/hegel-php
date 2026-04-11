@@ -4,7 +4,7 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.3",
         "spomky-labs/cbor-php": "^3.2"
     },
     "require-dev": {

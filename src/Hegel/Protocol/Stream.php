@@ -114,9 +114,10 @@ final class Stream
         $decoded = CborCodec::decode($payload);
 
         if (is_array($decoded) && isset($decoded['error'])) {
-            $type = $decoded['type'] ?? 'Unknown';
-            $error = $decoded['error'];
-            throw new ConnectionException("Server error ({$type}): {$error}");
+            throw ConnectionException::serverError(
+                type: $decoded['type'] ?? 'Unknown',
+                error: $decoded['error'],
+            );
         }
 
         if (is_array($decoded) && array_key_exists('result', $decoded)) {

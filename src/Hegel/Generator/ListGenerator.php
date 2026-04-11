@@ -9,14 +9,14 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class ListGenerator implements Generator
+final class ListGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 
     public function __construct(
-        private readonly BasicGenerator $elements,
-        private readonly int $minSize = 0,
-        private readonly null|int $maxSize = null,
+        private SchemaGenerator $elements,
+        private int $minSize = 0,
+        private null|int $maxSize = null,
     ) {}
 
     public function minSize(int $value): self
@@ -24,7 +24,9 @@ final class ListGenerator implements Generator
         if ($this->maxSize !== null && $value > $this->maxSize) {
             throw new \InvalidArgumentException('minSize cannot be greater than maxSize');
         }
-        return new self($this->elements, $value, $this->maxSize);
+        $new = clone $this;
+        $new->minSize = $value;
+        return $new;
     }
 
     public function maxSize(int $value): self
@@ -32,10 +34,13 @@ final class ListGenerator implements Generator
         if ($value < $this->minSize) {
             throw new \InvalidArgumentException('maxSize cannot be less than minSize');
         }
-        return new self($this->elements, $this->minSize, $value);
+        $new = clone $this;
+        $new->maxSize = $value;
+        return $new;
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function schema(): array
     {
         $schema = [
@@ -51,6 +56,7 @@ final class ListGenerator implements Generator
         return $schema;
     }
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         return $testCase->generateFromSchema($this->schema());

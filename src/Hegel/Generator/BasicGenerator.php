@@ -10,7 +10,7 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class BasicGenerator implements Generator
+final class BasicGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 
@@ -25,11 +25,13 @@ final class BasicGenerator implements Generator
     ) {}
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function schema(): array
     {
         return $this->schema;
     }
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         if ($this->spanLabel !== null) {

@@ -75,29 +75,28 @@ final class ServerProcess
         return $status['running'];
     }
 
+    // @mago-expect lint:halstead
     public function stop(): void
     {
         if ($this->process === null) {
             return;
         }
 
-        if ($this->stdin !== null) {
-            try {
-                fclose($this->stdin);
-            } catch (\Throwable $e) {
-                error_log('[hegel] stdin close failed: ' . $e->getMessage());
-            }
-            $this->stdin = null;
+        if ($this->stdin === null && $this->stdout === null) {
+            return;
         }
 
-        if ($this->stdout !== null) {
-            try {
-                fclose($this->stdout);
-            } catch (\Throwable $e) {
-                error_log('[hegel] stdout close failed: ' . $e->getMessage());
-            }
-            $this->stdout = null;
+        try {
+            fclose($this->stdin);
+        } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
         }
+        $this->stdin = null;
+
+        try {
+            fclose($this->stdout);
+        } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+        }
+        $this->stdout = null;
 
         proc_terminate($this->process);
         proc_close($this->process);

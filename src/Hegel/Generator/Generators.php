@@ -75,25 +75,25 @@ final class Generators
         return new BasicGenerator(['type' => 'regex', 'pattern' => $pattern, 'fullmatch' => false]);
     }
 
-    public static function lists(BasicGenerator $elements): ListGenerator
+    public static function lists(SchemaGenerator $elements): ListGenerator
     {
         return new ListGenerator($elements);
     }
 
-    public static function dicts(BasicGenerator $keys, BasicGenerator $values): DictGenerator
+    public static function dicts(SchemaGenerator $keys, SchemaGenerator $values): DictGenerator
     {
         return new DictGenerator($keys, $values);
     }
 
-    public static function tuples(BasicGenerator ...$elements): BasicGenerator
+    public static function tuples(SchemaGenerator ...$elements): BasicGenerator
     {
         return new BasicGenerator([
             'type' => 'tuple',
-            'elements' => array_map(fn(BasicGenerator $g): array => $g->schema(), $elements),
+            'elements' => array_map(fn(SchemaGenerator $g): array => $g->schema(), $elements),
         ]);
     }
 
-    public static function oneOf(Generator ...$generators): BasicGenerator
+    public static function oneOf(SchemaGenerator ...$generators): BasicGenerator
     {
         if ($generators === []) {
             throw new \InvalidArgumentException('oneOf requires at least one generator');
@@ -101,12 +101,6 @@ final class Generators
 
         $branches = [];
         foreach ($generators as $i => $gen) {
-            if (!$gen instanceof BasicGenerator) {
-                throw new \InvalidArgumentException(
-                    'oneOf only supports BasicGenerator instances for schema-based generation',
-                );
-            }
-
             $branches[] = [
                 'type' => 'tuple',
                 'elements' => [
@@ -123,12 +117,8 @@ final class Generators
         );
     }
 
-    public static function optional(Generator $element): BasicGenerator
+    public static function optional(SchemaGenerator $element): BasicGenerator
     {
-        if (!$element instanceof BasicGenerator) {
-            throw new \InvalidArgumentException('optional only supports BasicGenerator instances');
-        }
-
         return new BasicGenerator(
             schema: [
                 'type' => 'one_of',

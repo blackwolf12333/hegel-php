@@ -9,7 +9,7 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class DomainGenerator implements Generator
+final class DomainGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 
@@ -23,6 +23,7 @@ final class DomainGenerator implements Generator
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function schema(): array
     {
         return [
@@ -31,6 +32,7 @@ final class DomainGenerator implements Generator
         ];
     }
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         return $testCase->generateFromSchema($this->schema());

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Hegel\Codec;
 
-use CBOR\ByteStringObject;
 use CBOR\CBORObject;
 use CBOR\Decoder;
 use CBOR\Encoder;
@@ -16,27 +15,22 @@ use CBOR\NegativeIntegerObject;
 use CBOR\Normalizable;
 use CBOR\StringStream;
 use CBOR\Tag;
-use CBOR\TextStringObject;
 use CBOR\UnsignedIntegerObject;
 
 final class CborCodec
 {
-    private static null|Encoder $encoder = null;
-    private static null|Decoder $decoder = null;
-
     public static function encode(mixed $value): string
     {
-        self::$encoder ??= new Encoder();
-        return self::$encoder->encode($value);
+        return new Encoder()->encode($value);
     }
 
     public static function decode(string $data): mixed
     {
-        self::$decoder ??= Decoder::create();
+        $decoder = Decoder::create();
 
         try {
             $stream = StringStream::create($data);
-            $object = self::$decoder->decode($stream);
+            $object = $decoder->decode($stream);
         } catch (\Throwable $e) {
             throw new \InvalidArgumentException('Failed to decode CBOR: ' . $e->getMessage(), 0, $e);
         }

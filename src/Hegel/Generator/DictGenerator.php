@@ -9,28 +9,33 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class DictGenerator implements Generator
+final class DictGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 
     public function __construct(
-        private readonly BasicGenerator $keys,
-        private readonly BasicGenerator $values,
-        private readonly int $minSize = 0,
-        private readonly null|int $maxSize = null,
+        private SchemaGenerator $keys,
+        private SchemaGenerator $values,
+        private int $minSize = 0,
+        private null|int $maxSize = null,
     ) {}
 
     public function minSize(int $value): self
     {
-        return new self($this->keys, $this->values, $value, $this->maxSize);
+        $new = clone $this;
+        $new->minSize = $value;
+        return $new;
     }
 
     public function maxSize(int $value): self
     {
-        return new self($this->keys, $this->values, $this->minSize, $value);
+        $new = clone $this;
+        $new->maxSize = $value;
+        return $new;
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function schema(): array
     {
         $schema = [
@@ -47,6 +52,7 @@ final class DictGenerator implements Generator
         return $schema;
     }
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         $result = $testCase->generateFromSchema($this->schema());

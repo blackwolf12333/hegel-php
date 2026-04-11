@@ -9,7 +9,7 @@ use Hegel\Protocol\Stream;
 final class Collection
 {
     public function __construct(
-        private readonly mixed $collectionId,
+        private readonly int|string $collectionId,
         private readonly Stream $stream,
     ) {}
 

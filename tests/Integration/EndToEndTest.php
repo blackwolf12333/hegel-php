@@ -17,11 +17,13 @@ final class EndToEndTest extends TestCase
 {
     use HegelTrait;
 
+    #[\Override]
     protected function tearDown(): void
     {
         // Don't reset session between tests - reuse connection
     }
 
+    #[\Override]
     public static function tearDownAfterClass(): void
     {
         Session::reset();

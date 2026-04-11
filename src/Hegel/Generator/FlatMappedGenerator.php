@@ -19,6 +19,7 @@ final class FlatMappedGenerator implements Generator
         private readonly \Closure $fn,
     ) {}
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         $testCase->startSpan(SpanLabel::FlatMap->value);

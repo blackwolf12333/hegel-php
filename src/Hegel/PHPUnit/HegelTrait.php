@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hegel\PHPUnit;
 
 use Hegel\Exception\FlakyTestException;
+use Hegel\Protocol\Connection;
 use Hegel\Runner;
 use Hegel\RunResult;
 use Hegel\Server\Session;
@@ -41,6 +42,7 @@ trait HegelTrait
         null|int $testCases = null,
         null|int $seed = null,
         null|array $suppressHealthChecks = null,
+        null|Connection $connection = null,
     ): void {
         // Read #[Property] attribute from calling test method
         $property = $this->resolvePropertyAttribute();
@@ -49,7 +51,7 @@ trait HegelTrait
         $seed ??= $property?->seed;
         $suppressHealthChecks ??= $property->suppressHealthChecks ?? [];
 
-        $conn = Session::global()->connection();
+        $conn = $connection ?? Session::global()->connection();
         $runner = new Runner($conn);
 
         $result = $runner->run(
@@ -73,8 +75,7 @@ trait HegelTrait
             if ($attributes !== []) {
                 return $attributes[0]->newInstance();
             }
-        } catch (\ReflectionException $e) {
-            error_log('[hegel] could not resolve Property attribute: ' . $e->getMessage());
+        } catch (\ReflectionException) { // @mago-expect lint:no-empty-catch-clause
         }
         return null;
     }

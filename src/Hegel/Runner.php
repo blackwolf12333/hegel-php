@@ -7,6 +7,7 @@ namespace Hegel;
 use Hegel\Exception\AssumeRejectedException;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
+use Hegel\Exception\ServerErrorType;
 use Hegel\Protocol\Connection;
 use Hegel\Protocol\Stream;
 
@@ -162,17 +163,13 @@ final class Runner
                     'status' => $status,
                     'origin' => $origin,
                 ]);
-            } catch (ConnectionException $e) {
-                if (!str_contains($e->getMessage(), 'StopTest')) {
-                    error_log('[hegel] mark_complete failed (stream may be closed): ' . $e->getMessage());
-                }
+            } catch (ConnectionException) { // @mago-expect lint:no-empty-catch-clause
             }
         }
 
         try {
             $caseStream->close();
-        } catch (\Throwable $e) {
-            error_log('[hegel] stream close failed: ' . $e->getMessage());
+        } catch (\Throwable) { // @mago-expect lint:no-empty-catch-clause
         }
 
         return $error;
@@ -191,21 +188,19 @@ final class Runner
         } catch (DataExhaustedException) {
             return ['VALID', null, null, true];
         } catch (\Throwable $e) {
-            if ($this->isStopTestError($e)) {
+            if ($this->isExpectedTermination($e)) {
                 return ['VALID', null, null, true];
             }
             return ['INTERESTING', $this->formatOrigin($e), $e, false];
         }
     }
 
-    private function isStopTestError(\Throwable $e): bool
+    private function isExpectedTermination(\Throwable $e): bool
     {
-        $msg = $e->getMessage();
         return (
-            str_contains($msg, 'StopTest')
-            || str_contains($msg, 'overflow')
-            || str_contains($msg, 'FlakyStrategyDefinition')
-            || str_contains($msg, 'FlakyReplay')
+            $e instanceof ConnectionException
+            && $e->serverErrorType !== null
+            && $e->serverErrorType->isExpectedTermination()
         );
     }
 

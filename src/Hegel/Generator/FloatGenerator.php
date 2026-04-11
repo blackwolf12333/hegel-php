@@ -9,84 +9,91 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class FloatGenerator implements Generator
+final class FloatGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 
     public function __construct(
-        private readonly null|float $min = null,
-        private readonly null|float $max = null,
-        private readonly null|bool $allowNaN = null,
-        private readonly null|bool $allowInfinity = null,
-        private readonly null|bool $excludeMin = null,
-        private readonly null|bool $excludeMax = null,
+        private null|float $min = null,
+        private null|float $max = null,
+        private null|bool $allowNaN = null,
+        private null|bool $allowInfinity = null,
+        private null|bool $excludeMin = null,
+        private null|bool $excludeMax = null,
     ) {}
 
     public function min(float $value): self
     {
-        return new self(
-            $value,
-            $this->max,
-            $this->allowNaN,
-            $this->allowInfinity,
-            $this->excludeMin,
-            $this->excludeMax,
-        );
+        $new = clone $this;
+        $new->min = $value;
+        return $new;
     }
 
     public function max(float $value): self
     {
-        return new self(
-            $this->min,
-            $value,
-            $this->allowNaN,
-            $this->allowInfinity,
-            $this->excludeMin,
-            $this->excludeMax,
-        );
+        $new = clone $this;
+        $new->max = $value;
+        return $new;
     }
 
     public function allowNaN(): self
     {
-        return new self($this->min, $this->max, true, $this->allowInfinity, $this->excludeMin, $this->excludeMax);
+        $new = clone $this;
+        $new->allowNaN = true;
+        return $new;
     }
 
     public function disallowNaN(): self
     {
-        return new self($this->min, $this->max, false, $this->allowInfinity, $this->excludeMin, $this->excludeMax);
+        $new = clone $this;
+        $new->allowNaN = false;
+        return $new;
     }
 
     public function allowInfinity(): self
     {
-        return new self($this->min, $this->max, $this->allowNaN, true, $this->excludeMin, $this->excludeMax);
+        $new = clone $this;
+        $new->allowInfinity = true;
+        return $new;
     }
 
     public function disallowInfinity(): self
     {
-        return new self($this->min, $this->max, $this->allowNaN, false, $this->excludeMin, $this->excludeMax);
+        $new = clone $this;
+        $new->allowInfinity = false;
+        return $new;
     }
 
     public function excludeMin(): self
     {
-        return new self($this->min, $this->max, $this->allowNaN, $this->allowInfinity, true, $this->excludeMax);
+        $new = clone $this;
+        $new->excludeMin = true;
+        return $new;
     }
 
     public function includeMin(): self
     {
-        return new self($this->min, $this->max, $this->allowNaN, $this->allowInfinity, false, $this->excludeMax);
+        $new = clone $this;
+        $new->excludeMin = false;
+        return $new;
     }
 
     public function excludeMax(): self
     {
-        return new self($this->min, $this->max, $this->allowNaN, $this->allowInfinity, $this->excludeMin, true);
+        $new = clone $this;
+        $new->excludeMax = true;
+        return $new;
     }
 
     public function includeMax(): self
     {
-        return new self($this->min, $this->max, $this->allowNaN, $this->allowInfinity, $this->excludeMin, false);
+        $new = clone $this;
+        $new->excludeMax = false;
+        return $new;
     }
 
     /** @return array<string, mixed> */
+    #[\Override]
     public function schema(): array
     {
         $schema = ['type' => 'float'];
@@ -113,6 +120,7 @@ final class FloatGenerator implements Generator
         return $schema;
     }
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         return $testCase->generateFromSchema($this->schema());

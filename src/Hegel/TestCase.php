@@ -7,6 +7,7 @@ namespace Hegel;
 use Hegel\Exception\AssumeRejectedException;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
+use Hegel\Exception\ServerErrorType;
 use Hegel\Generator\Generator;
 use Hegel\Protocol\Stream;
 
@@ -67,7 +68,7 @@ final class TestCase
                 'schema' => $schema,
             ]);
         } catch (ConnectionException $e) {
-            if (str_contains($e->getMessage(), 'StopTest')) {
+            if ($e->serverErrorType === ServerErrorType::StopTest) {
                 throw new DataExhaustedException('Data exhausted', 0, $e);
             }
             throw $e;

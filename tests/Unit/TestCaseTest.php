@@ -127,7 +127,7 @@ final class TestCaseTest extends TestCase
 
         // Verify what was sent
         $packet = PacketReader::read($serverSock);
-        $decoded = CborCodec::decode($packet->payload);
+        $decoded = CborCodec::decode($packet?->payload);
         $this->assertSame('generate', $decoded['command']);
 
         fclose($serverSock);
@@ -160,7 +160,7 @@ final class TestCaseTest extends TestCase
         $tc->target(0.5, 'score');
 
         $packet = PacketReader::read($serverSock);
-        $decoded = CborCodec::decode($packet->payload);
+        $decoded = CborCodec::decode($packet?->payload);
         $this->assertSame('target', $decoded['command']);
         $this->assertSame(0.5, $decoded['value']);
         $this->assertSame('score', $decoded['label']);
@@ -183,12 +183,12 @@ final class TestCaseTest extends TestCase
 
         // Read both packets sent
         $p1 = PacketReader::read($serverSock);
-        $d1 = CborCodec::decode($p1->payload);
+        $d1 = CborCodec::decode($p1?->payload);
         $this->assertSame('start_span', $d1['command']);
         $this->assertSame(1, $d1['label']);
 
         $p2 = PacketReader::read($serverSock);
-        $d2 = CborCodec::decode($p2->payload);
+        $d2 = CborCodec::decode($p2?->payload);
         $this->assertSame('stop_span', $d2['command']);
         $this->assertFalse($d2['discard']);
 
@@ -208,7 +208,7 @@ final class TestCaseTest extends TestCase
         $this->assertInstanceOf(Collection::class, $coll);
 
         $packet = PacketReader::read($serverSock);
-        $decoded = CborCodec::decode($packet->payload);
+        $decoded = CborCodec::decode($packet?->payload);
         $this->assertSame('new_collection', $decoded['command']);
         $this->assertSame(0, $decoded['min_size']);
         $this->assertSame(10, $decoded['max_size']);

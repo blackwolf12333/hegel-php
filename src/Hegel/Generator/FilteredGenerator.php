@@ -22,6 +22,7 @@ final class FilteredGenerator implements Generator
         private readonly \Closure $predicate,
     ) {}
 
+    #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         $testCase->startSpan(SpanLabel::Filter->value);
