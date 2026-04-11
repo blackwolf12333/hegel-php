@@ -1,0 +1,34 @@
+# Welcome to Mago!
+# For full documentation, see https://mago.carthage.software/tools/overview
+php-version = "8.4.0"
+
+[source]
+paths = ["src/Hegel/", "tests/"]
+includes = ["vendor"]
+excludes = []
+
+[formatter]
+print-width = 120
+tab-width = 4
+use-tabs = false
+
+[linter]
+integrations = ["phpunit"]
+
+[linter.rules]
+ambiguous-function-call = { enabled = false }
+literal-named-argument = { enabled = false }
+interface-name = { enabled = false }
+too-many-methods = { threshold = 35 }
+excessive-parameter-list = { threshold = 7 }
+cyclomatic-complexity = { threshold = 34 }
+halstead = { difficulty-threshold = 20, effort-threshold = 10000 }
+kan-defect = { threshold = 2.5 }
+
+[analyzer]
+find-unused-definitions = true
+find-unused-expressions = false
+analyze-dead-code = false
+check-throws = true
+allow-possibly-undefined-array-keys = true
+perform-heuristic-checks = true

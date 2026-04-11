@@ -1,0 +1,191 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Hegel\Generator;
+
+use Hegel\SpanLabel;
+
+final class Generators
+{
+    public static function integers(int $min = PHP_INT_MIN, int $max = PHP_INT_MAX): BasicGenerator
+    {
+        if ($min > $max) {
+            throw new \InvalidArgumentException("min ({$min}) cannot be greater than max ({$max})");
+        }
+        return new BasicGenerator(['type' => 'integer', 'min_value' => $min, 'max_value' => $max]);
+    }
+
+    public static function floats(): FloatGenerator
+    {
+        return new FloatGenerator();
+    }
+
+    public static function booleans(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'boolean']);
+    }
+
+    public static function text(int $minSize = 0, null|int $maxSize = null): BasicGenerator
+    {
+        $schema = ['type' => 'string', 'min_size' => $minSize];
+        if ($maxSize !== null) {
+            $schema['max_size'] = $maxSize;
+        }
+        return new BasicGenerator($schema);
+    }
+
+    public static function binary(int $minSize = 0, null|int $maxSize = null): BasicGenerator
+    {
+        $schema = ['type' => 'binary', 'min_size' => $minSize];
+        if ($maxSize !== null) {
+            $schema['max_size'] = $maxSize;
+        }
+        return new BasicGenerator($schema);
+    }
+
+    public static function just(mixed $value): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'constant', 'value' => $value]);
+    }
+
+    /**
+     * @param non-empty-array<mixed> $values
+     */
+    public static function sampledFrom(array $values): BasicGenerator
+    {
+        if ($values === []) {
+            throw new \InvalidArgumentException('sampledFrom requires at least one value');
+        }
+        $indexedValues = array_values($values);
+        return new BasicGenerator(
+            schema: ['type' => 'integer', 'min_value' => 0, 'max_value' => count($indexedValues) - 1],
+            transform: fn(mixed $index): mixed => $indexedValues[(int) $index],
+            spanLabel: SpanLabel::SampledFrom,
+        );
+    }
+
+    public static function fromRegex(string $pattern): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'regex', 'pattern' => $pattern, 'fullmatch' => true]);
+    }
+
+    public static function fromPartialRegex(string $pattern): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'regex', 'pattern' => $pattern, 'fullmatch' => false]);
+    }
+
+    public static function lists(BasicGenerator $elements): ListGenerator
+    {
+        return new ListGenerator($elements);
+    }
+
+    public static function dicts(BasicGenerator $keys, BasicGenerator $values): DictGenerator
+    {
+        return new DictGenerator($keys, $values);
+    }
+
+    public static function tuples(BasicGenerator ...$elements): BasicGenerator
+    {
+        return new BasicGenerator([
+            'type' => 'tuple',
+            'elements' => array_map(fn(BasicGenerator $g): array => $g->schema(), $elements),
+        ]);
+    }
+
+    public static function oneOf(Generator ...$generators): BasicGenerator
+    {
+        if ($generators === []) {
+            throw new \InvalidArgumentException('oneOf requires at least one generator');
+        }
+
+        $branches = [];
+        foreach ($generators as $i => $gen) {
+            if (!$gen instanceof BasicGenerator) {
+                throw new \InvalidArgumentException(
+                    'oneOf only supports BasicGenerator instances for schema-based generation',
+                );
+            }
+
+            $branches[] = [
+                'type' => 'tuple',
+                'elements' => [
+                    ['type' => 'constant', 'value' => $i],
+                    $gen->schema(),
+                ],
+            ];
+        }
+
+        return new BasicGenerator(
+            schema: ['type' => 'one_of', 'generators' => $branches],
+            transform: fn(mixed $result): mixed => $result[1],
+            spanLabel: SpanLabel::OneOf,
+        );
+    }
+
+    public static function optional(Generator $element): BasicGenerator
+    {
+        if (!$element instanceof BasicGenerator) {
+            throw new \InvalidArgumentException('optional only supports BasicGenerator instances');
+        }
+
+        return new BasicGenerator(
+            schema: [
+                'type' => 'one_of',
+                'generators' => [
+                    [
+                        'type' => 'tuple',
+                        'elements' => [
+                            ['type' => 'constant', 'value' => 0],
+                            ['type' => 'null'],
+                        ],
+                    ],
+                    [
+                        'type' => 'tuple',
+                        'elements' => [
+                            ['type' => 'constant', 'value' => 1],
+                            $element->schema(),
+                        ],
+                    ],
+                ],
+            ],
+            transform: fn(mixed $result): mixed => $result[0] === 0 ? null : $result[1],
+            spanLabel: SpanLabel::Optional,
+        );
+    }
+
+    public static function emails(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'email']);
+    }
+
+    public static function urls(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'url']);
+    }
+
+    public static function domains(): DomainGenerator
+    {
+        return new DomainGenerator();
+    }
+
+    public static function ipv4(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'ipv4']);
+    }
+
+    public static function ipv6(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'ipv6']);
+    }
+
+    public static function dates(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'date']);
+    }
+
+    public static function datetimes(): BasicGenerator
+    {
+        return new BasicGenerator(['type' => 'datetime']);
+    }
+}

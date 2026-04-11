@@ -1,0 +1,4 @@
+/vendor/
+/.idea/
+/.hegel/
+/.phpunit.result.cache

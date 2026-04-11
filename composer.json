@@ -1,0 +1,23 @@
+{
+    "name": "hegel/hegel-php",
+    "description": "PHP client for Hegel property-based testing",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "spomky-labs/cbor-php": "^3.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Hegel\\": "src/Hegel/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Hegel\\Tests\\": "tests/"
+        }
+    }
+}
