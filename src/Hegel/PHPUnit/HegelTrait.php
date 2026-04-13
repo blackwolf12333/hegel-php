@@ -9,63 +9,56 @@ use Hegel\Protocol\Connection;
 use Hegel\Runner;
 use Hegel\RunResult;
 use Hegel\Server\Session;
-use Hegel\TestCase as HegelTestCase;
+use Hegel\TestCase as TC;
 
 /**
  * Trait for PHPUnit test cases that use Hegel property-based testing.
  *
- * Provides the check() method to run property-based tests. Configuration
- * comes from #[Property] on the test method, or from check() parameters.
+ * Test methods annotated with #[Property] receive a Hegel TestCase as their
+ * first argument. DataProvider and #[TestWith] arguments follow after it.
  *
  * Example:
  *   #[Test, Property(testCases: 500)]
- *   public function additionIsCommutative(): void {
- *       $this->check(function (HegelTestCase $tc) {
- *           $x = $tc->draw(gen::integers(-1000, 1000));
- *           $y = $tc->draw(gen::integers(-1000, 1000));
- *           $this->assertSame($x + $y, $y + $x);
- *       });
+ *   public function additionIsCommutative(TC $tc): void {
+ *       $x = $tc->draw(gen::integers(-1000, 1000));
+ *       $y = $tc->draw(gen::integers(-1000, 1000));
+ *       $this->assertSame($x + $y, $y + $x);
  *   }
  */
 trait HegelTrait
 {
-    abstract public function name(): string;
-
-    abstract public static function fail(string $message = ''): never;
-
-    abstract public function addToAssertionCount(int $count): void;
-
     /**
-     * Run a property-based test.
-     *
-     * @param \Closure(HegelTestCase): void $testFn The property test function
-     * @param int|null $testCases Override number of test cases (default: from #[Property] or 100)
-     * @param int|null $seed Override random seed
-     * @param list<string>|null $suppressHealthChecks Override health check suppression
+     * @param array<mixed> $testArguments
      */
-    protected function check(
-        \Closure $testFn,
-        null|int $testCases = null,
-        null|int $seed = null,
-        null|array $suppressHealthChecks = null,
+    protected function invokeTestMethod(string $methodName, array $testArguments): mixed
+    {
+        $property = $this->resolvePropertyAttribute($methodName);
+
+        if ($property === null) {
+            return parent::invokeTestMethod($methodName, $testArguments);
+        }
+
+        $this->runPropertyTest($methodName, $testArguments, $property);
+
+        return null;
+    }
+
+    private function runPropertyTest(
+        string $methodName,
+        array $testArguments,
+        Property $property,
         null|Connection $connection = null,
     ): void {
-        // Read #[Property] attribute from calling test method
-        $property = $this->resolvePropertyAttribute();
-
-        $testCases ??= $property?->testCases ?? 100;
-        $seed ??= $property?->seed;
-        /** @var list<string> $healthChecks */
-        $healthChecks = $suppressHealthChecks ?? $property?->suppressHealthChecks ?? [];
-
         $conn = $connection ?? Session::global()->connection();
         $runner = new Runner($conn);
 
         $result = $runner->run(
-            testFn: $testFn,
-            testCases: $testCases,
-            seed: $seed,
-            suppressHealthCheck: $healthChecks,
+            testFn: function (TC $tc) use ($methodName, $testArguments): void {
+                $this->{$methodName}($tc, ...$testArguments);
+            },
+            testCases: $property->testCases,
+            seed: $property->seed,
+            suppressHealthCheck: $property->suppressHealthChecks,
             noteFn: function (string $msg): void {
                 fwrite(STDERR, "[hegel] {$msg}\n");
             },
@@ -74,16 +67,17 @@ trait HegelTrait
         $this->handleResult($result);
     }
 
-    private function resolvePropertyAttribute(): null|Property
+    private function resolvePropertyAttribute(string $methodName): null|Property
     {
         try {
-            $method = new \ReflectionMethod($this, $this->name());
+            $method = new \ReflectionMethod($this, $methodName);
             $attributes = $method->getAttributes(Property::class);
             if ($attributes !== []) {
                 return $attributes[0]->newInstance();
             }
         } catch (\ReflectionException) { // @mago-expect lint:no-empty-catch-clause
         }
+
         return null;
     }
 
@@ -109,7 +103,6 @@ trait HegelTrait
             $this->fail('Property test failed (seed: ' . $result->seed . ')');
         }
 
-        // Count as an assertion
         $this->addToAssertionCount(1);
     }
 }

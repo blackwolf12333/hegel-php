@@ -8,7 +8,7 @@
         "spomky-labs/cbor-php": "^3.2"
     },
     "require-dev": {
-        "phpunit/phpunit": "^12.0"
+        "phpunit/phpunit": "^13.0"
     },
     "autoload": {
         "psr-4": {

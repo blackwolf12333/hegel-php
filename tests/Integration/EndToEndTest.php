@@ -9,14 +9,13 @@ use Hegel\PHPUnit\HegelTrait;
 use Hegel\PHPUnit\Property;
 use Hegel\Runner;
 use Hegel\Server\Session;
-use Hegel\TestCase as HegelTestCase;
+use Hegel\TestCase as TC;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class EndToEndTest extends TestCase
 {
     use HegelTrait;
-
     #[\Override]
     protected function tearDown(): void
     {
@@ -29,13 +28,11 @@ final class EndToEndTest extends TestCase
         Session::reset();
     }
 
-    #[Test]
-    public function integers_self_equality(): void
+    #[Test, Property]
+    public function integers_self_equality(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $n = (int) $tc->draw(gen::integers(-1000, 1000));
-            $this->assertSame($n, $n);
-        });
+        $n = (int) $tc->draw(gen::integers(-1000, 1000));
+        $this->assertSame($n, $n);
     }
 
     #[Test]
@@ -45,7 +42,7 @@ final class EndToEndTest extends TestCase
         $runner = new Runner($conn);
 
         $result = $runner->run(
-            testFn: function (HegelTestCase $tc): void {
+            testFn: function (TC $tc): void {
                 $n = (int) $tc->draw(gen::integers(0, 100));
                 if ($n >= 50) {
                     throw new \RuntimeException("Value {$n} is >= 50");
@@ -60,84 +57,68 @@ final class EndToEndTest extends TestCase
         $this->assertStringContainsString('50', $result->finalErrors[0]->getMessage());
     }
 
-    #[Test]
-    public function addition_is_commutative(): void
+    #[Test, Property]
+    public function addition_is_commutative(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $x = (int) $tc->draw(gen::integers(-1000, 1000));
-            $y = (int) $tc->draw(gen::integers(-1000, 1000));
-            $this->assertSame($x + $y, $y + $x);
-        });
+        $x = (int) $tc->draw(gen::integers(-1000, 1000));
+        $y = (int) $tc->draw(gen::integers(-1000, 1000));
+        $this->assertSame($x + $y, $y + $x);
     }
 
-    #[Test]
-    public function assume_filters_correctly(): void
+    #[Test, Property]
+    public function assume_filters_correctly(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $n = (int) $tc->draw(gen::integers(0, 100));
-            if ($n <= 0) {
-                $tc->reject();
-            }
-            $this->assertGreaterThan(0, $n);
-        });
+        $n = (int) $tc->draw(gen::integers(0, 100));
+        if ($n <= 0) {
+            $tc->reject();
+        }
+        $this->assertGreaterThan(0, $n);
     }
 
-    #[Test]
-    public function text_generation_produces_strings(): void
+    #[Test, Property]
+    public function text_generation_produces_strings(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $text = (string) $tc->draw(gen::text(0, 100));
-            $this->assertIsString($text);
-        });
+        $text = (string) $tc->draw(gen::text(0, 100));
+        $this->assertIsString($text);
     }
 
-    #[Test]
-    public function list_generation_with_bounds(): void
+    #[Test, Property]
+    public function list_generation_with_bounds(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $list = (array) $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
-            $this->assertIsArray($list);
-            $this->assertGreaterThanOrEqual(1, count($list));
-            $this->assertLessThanOrEqual(5, count($list));
-        });
+        $list = (array) $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
+        $this->assertIsArray($list);
+        $this->assertGreaterThanOrEqual(1, count($list));
+        $this->assertLessThanOrEqual(5, count($list));
     }
 
-    #[Test]
-    public function boolean_generation(): void
+    #[Test, Property]
+    public function boolean_generation(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $b = (bool) $tc->draw(gen::booleans());
-            $this->assertIsBool($b);
-        });
+        $b = (bool) $tc->draw(gen::booleans());
+        $this->assertIsBool($b);
     }
 
-    #[Test]
-    public function sampled_from_returns_element(): void
+    #[Test, Property]
+    public function sampled_from_returns_element(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $val = (string) $tc->draw(gen::sampledFrom(['a', 'b', 'c']));
-            $this->assertContains($val, ['a', 'b', 'c']);
-        });
+        $val = (string) $tc->draw(gen::sampledFrom(['a', 'b', 'c']));
+        $this->assertContains($val, ['a', 'b', 'c']);
     }
 
     #[Test, Property(testCases: 50)]
-    public function email_generation_contains_at_sign(): void
+    public function email_generation_contains_at_sign(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $email = (string) $tc->draw(gen::emails());
-            $this->assertStringContainsString('@', $email);
-        });
+        $email = (string) $tc->draw(gen::emails());
+        $this->assertStringContainsString('@', $email);
     }
 
-    #[Test]
-    public function sort_is_idempotent(): void
+    #[Test, Property]
+    public function sort_is_idempotent(TC $tc): void
     {
-        $this->check(function (HegelTestCase $tc): void {
-            $list = (array) $tc->draw(gen::lists(gen::integers(0, 100)));
-            sort($list);
-            $sorted = $list;
-            sort($sorted);
-            $this->assertEquals($list, $sorted);
-        });
+        $list = (array) $tc->draw(gen::lists(gen::integers(0, 100)));
+        sort($list);
+        $sorted = $list;
+        sort($sorted);
+        $this->assertEquals($list, $sorted);
     }
 }
