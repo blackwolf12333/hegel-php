@@ -15,10 +15,12 @@ final class Collection
 
     public function more(): bool
     {
-        return (bool) $this->stream->requestCbor([
+        $result = $this->stream->requestCbor([
             'command' => 'collection_more',
             'collection_id' => $this->collectionId,
         ]);
+        assert(is_bool($result));
+        return $result;
     }
 
     public function reject(): void

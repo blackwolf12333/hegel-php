@@ -54,10 +54,10 @@ final class Runner
 
         // Event loop on test stream
         $finalErrors = [];
-        $testDoneResults = null;
 
         while (true) {
             [$msgId, $event] = $testStream->receiveRequest();
+            assert(is_array($event));
             $eventName = $event['event'] ?? null;
 
             if ($eventName === 'test_case') {
@@ -69,10 +69,11 @@ final class Runner
                 continue;
             }
 
-            $testDoneResults = $event['results'] ?? [];
+            $results = $event['results'] ?? [];
+            assert(is_array($results));
             $testStream->sendReply($msgId, ['result' => true]);
 
-            $nInteresting = $testDoneResults['interesting_test_cases'] ?? 0;
+            $nInteresting = (int) ($results['interesting_test_cases'] ?? 0);
             $this->handleReplayCases($nInteresting, $testStream, $testFn, $noteFn, $finalErrors);
             break;
         }
@@ -80,17 +81,18 @@ final class Runner
         $testStream->close();
 
         return new RunResult(
-            passed: $testDoneResults['passed'] ?? true,
-            testCases: $testDoneResults['test_cases'] ?? 0,
-            seed: $testDoneResults['seed'] ?? '',
-            error: $testDoneResults['error'] ?? null,
-            healthCheckFailure: $testDoneResults['health_check_failure'] ?? null,
-            flaky: $testDoneResults['flaky'] ?? null,
+            passed: (bool) ($results['passed'] ?? true),
+            testCases: (int) ($results['test_cases'] ?? 0),
+            seed: (string) ($results['seed'] ?? ''),
+            error: isset($results['error']) ? (string) $results['error'] : null,
+            healthCheckFailure: isset($results['health_check_failure']) ? (string) $results['health_check_failure'] : null,
+            flaky: isset($results['flaky']) ? (string) $results['flaky'] : null,
             finalErrors: $finalErrors,
         );
     }
 
     /**
+     * @param array<array-key, mixed> $event
      * @param list<\Throwable> $finalErrors
      */
     private function handleTestCase(
@@ -101,8 +103,9 @@ final class Runner
         null|\Closure $noteFn,
         array &$finalErrors,
     ): void {
-        $caseStreamId = $event['stream_id'];
-        $phase = $event['is_final'] ?? false ? TestPhase::Final : TestPhase::Exploration;
+        $caseStreamId = (int) $event['stream_id'];
+        $isFinal = (bool) ($event['is_final'] ?? false);
+        $phase = $isFinal ? TestPhase::Final : TestPhase::Exploration;
 
         $testStream->sendReply($msgId, ['result' => null]);
 
@@ -125,12 +128,13 @@ final class Runner
     ): void {
         for ($i = 0; $i < $nInteresting; $i++) {
             [$replayMsgId, $replayEvent] = $testStream->receiveRequest();
+            assert(is_array($replayEvent));
 
             if (!isset($replayEvent['event']) || $replayEvent['event'] !== 'test_case') {
                 continue;
             }
 
-            $caseStreamId = $replayEvent['stream_id'];
+            $caseStreamId = (int) $replayEvent['stream_id'];
             $testStream->sendReply($replayMsgId, ['result' => null]);
 
             $error = $this->runTestCase($caseStreamId, $testFn, TestPhase::Final, $noteFn);

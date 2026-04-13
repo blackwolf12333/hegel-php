@@ -115,8 +115,8 @@ final class Stream
 
         if (is_array($decoded) && isset($decoded['error'])) {
             throw ConnectionException::serverError(
-                type: $decoded['type'] ?? 'Unknown',
-                error: $decoded['error'],
+                type: (string) ($decoded['type'] ?? 'Unknown'),
+                error: (string) $decoded['error'],
             );
         }
 

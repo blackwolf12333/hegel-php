@@ -38,16 +38,14 @@ final class BasicGenerator implements SchemaGenerator
             $testCase->startSpan($this->spanLabel->value);
         }
 
-        $result = $testCase->generateFromSchema($this->schema);
-
-        if ($this->transform !== null) {
-            $result = ($this->transform)($result);
+        try {
+            return $this->transform !== null
+                ? ($this->transform)($testCase->generateFromSchema($this->schema))
+                : $testCase->generateFromSchema($this->schema);
+        } finally {
+            if ($this->spanLabel !== null) {
+                $testCase->stopSpan();
+            }
         }
-
-        if ($this->spanLabel !== null) {
-            $testCase->stopSpan();
-        }
-
-        return $result;
     }
 }

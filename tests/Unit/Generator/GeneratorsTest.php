@@ -144,7 +144,9 @@ final class GeneratorsTest extends TestCase
         $this->assertInstanceOf(ListGenerator::class, $gen);
         $schema = $gen->schema();
         $this->assertSame('list', $schema['type']);
-        $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $schema['elements']);
+        $elements = $schema['elements'];
+        assert(is_array($elements));
+        $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $elements);
     }
 
     #[Test]
@@ -180,9 +182,11 @@ final class GeneratorsTest extends TestCase
         $gen = gen::tuples(gen::integers(0, 10), gen::booleans());
         $schema = $gen->schema();
         $this->assertSame('tuple', $schema['type']);
-        $this->assertCount(2, $schema['elements']);
-        $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $schema['elements'][0]);
-        $this->assertSame(['type' => 'boolean'], $schema['elements'][1]);
+        $elements = $schema['elements'];
+        assert(is_array($elements));
+        $this->assertCount(2, $elements);
+        $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $elements[0]);
+        $this->assertSame(['type' => 'boolean'], $elements[1]);
     }
 
     #[Test]
@@ -191,7 +195,9 @@ final class GeneratorsTest extends TestCase
         $gen = gen::oneOf(gen::integers(0, 10), gen::booleans());
         $schema = $gen->schema();
         $this->assertSame('one_of', $schema['type']);
-        $this->assertCount(2, $schema['generators']);
+        $generators = $schema['generators'];
+        assert(is_array($generators));
+        $this->assertCount(2, $generators);
     }
 
     #[Test]
@@ -207,12 +213,30 @@ final class GeneratorsTest extends TestCase
         $gen = gen::optional(gen::integers(0, 100));
         $schema = $gen->schema();
         $this->assertSame('one_of', $schema['type']);
-        $this->assertCount(2, $schema['generators']);
+        $generators = $schema['generators'];
+        assert(is_array($generators));
+        $this->assertCount(2, $generators);
+
         // First branch: null (tag 0)
-        $this->assertSame(0, $schema['generators'][0]['elements'][0]['value']);
-        $this->assertSame('null', $schema['generators'][0]['elements'][1]['type']);
+        $branch0 = $generators[0];
+        assert(is_array($branch0));
+        $branch0Elements = $branch0['elements'];
+        assert(is_array($branch0Elements));
+        $el0 = $branch0Elements[0];
+        assert(is_array($el0));
+        $this->assertSame(0, $el0['value']);
+        $el1 = $branch0Elements[1];
+        assert(is_array($el1));
+        $this->assertSame('null', $el1['type']);
+
         // Second branch: inner generator (tag 1)
-        $this->assertSame(1, $schema['generators'][1]['elements'][0]['value']);
+        $branch1 = $generators[1];
+        assert(is_array($branch1));
+        $branch1Elements = $branch1['elements'];
+        assert(is_array($branch1Elements));
+        $el0b = $branch1Elements[0];
+        assert(is_array($el0b));
+        $this->assertSame(1, $el0b['value']);
     }
 
     #[Test]

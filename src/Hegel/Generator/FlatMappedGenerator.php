@@ -23,11 +23,12 @@ final class FlatMappedGenerator implements Generator
     public function draw(TestCase $testCase): mixed
     {
         $testCase->startSpan(SpanLabel::FlatMap->value);
-        $value = $this->inner->draw($testCase);
-        /** @var Generator $derived */
-        $derived = ($this->fn)($value);
-        $result = $derived->draw($testCase);
-        $testCase->stopSpan();
-        return $result;
+        try {
+            $derived = ($this->fn)($this->inner->draw($testCase));
+            assert($derived instanceof Generator);
+            return $derived->draw($testCase);
+        } finally {
+            $testCase->stopSpan();
+        }
     }
 }

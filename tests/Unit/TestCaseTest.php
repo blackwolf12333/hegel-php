@@ -27,14 +27,18 @@ final class TestCaseTest extends TestCase
     private function createTestStream(): array
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair, 'stream_socket_pair() failed');
+        assert($pair !== false, 'stream_socket_pair() failed');
         $conn = Connection::fromRawStreams($pair[0], $pair[0]);
         $stream = $conn->newStream();
         return [$stream, $pair[1]];
     }
 
+    /**
+     * @param resource $serverSock
+     */
     private function replyWithResult(mixed $serverSock, int $streamId, int $messageId, mixed $result): void
     {
+        assert(is_resource($serverSock));
         PacketWriter::write($serverSock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -43,8 +47,12 @@ final class TestCaseTest extends TestCase
         ));
     }
 
+    /**
+     * @param resource $serverSock
+     */
     private function replyWithError(mixed $serverSock, int $streamId, int $messageId, string $error, string $type): void
     {
+        assert(is_resource($serverSock));
         PacketWriter::write($serverSock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -101,6 +109,7 @@ final class TestCaseTest extends TestCase
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
         $decoded = CborCodec::decode($packet->payload);
+        assert(is_array($decoded));
         $this->assertSame('generate', $decoded['command']);
         $this->assertSame($schema, $decoded['schema']);
 
@@ -127,7 +136,9 @@ final class TestCaseTest extends TestCase
 
         // Verify what was sent
         $packet = PacketReader::read($serverSock);
-        $decoded = CborCodec::decode($packet?->payload);
+        $this->assertNotNull($packet);
+        $decoded = CborCodec::decode($packet->payload);
+        assert(is_array($decoded));
         $this->assertSame('generate', $decoded['command']);
 
         fclose($serverSock);
@@ -160,7 +171,9 @@ final class TestCaseTest extends TestCase
         $tc->target(0.5, 'score');
 
         $packet = PacketReader::read($serverSock);
-        $decoded = CborCodec::decode($packet?->payload);
+        $this->assertNotNull($packet);
+        $decoded = CborCodec::decode($packet->payload);
+        assert(is_array($decoded));
         $this->assertSame('target', $decoded['command']);
         $this->assertSame(0.5, $decoded['value']);
         $this->assertSame('score', $decoded['label']);
@@ -183,12 +196,16 @@ final class TestCaseTest extends TestCase
 
         // Read both packets sent
         $p1 = PacketReader::read($serverSock);
-        $d1 = CborCodec::decode($p1?->payload);
+        $this->assertNotNull($p1);
+        $d1 = CborCodec::decode($p1->payload);
+        assert(is_array($d1));
         $this->assertSame('start_span', $d1['command']);
         $this->assertSame(1, $d1['label']);
 
         $p2 = PacketReader::read($serverSock);
-        $d2 = CborCodec::decode($p2?->payload);
+        $this->assertNotNull($p2);
+        $d2 = CborCodec::decode($p2->payload);
+        assert(is_array($d2));
         $this->assertSame('stop_span', $d2['command']);
         $this->assertFalse($d2['discard']);
 
@@ -208,7 +225,9 @@ final class TestCaseTest extends TestCase
         $this->assertInstanceOf(Collection::class, $coll);
 
         $packet = PacketReader::read($serverSock);
-        $decoded = CborCodec::decode($packet?->payload);
+        $this->assertNotNull($packet);
+        $decoded = CborCodec::decode($packet->payload);
+        assert(is_array($decoded));
         $this->assertSame('new_collection', $decoded['command']);
         $this->assertSame(0, $decoded['min_size']);
         $this->assertSame(10, $decoded['max_size']);

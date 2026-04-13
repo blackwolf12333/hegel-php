@@ -23,9 +23,10 @@ final class MappedGenerator implements Generator
     public function draw(TestCase $testCase): mixed
     {
         $testCase->startSpan(SpanLabel::Mapped->value);
-        $value = $this->inner->draw($testCase);
-        $result = ($this->fn)($value);
-        $testCase->stopSpan();
-        return $result;
+        try {
+            return ($this->fn)($this->inner->draw($testCase));
+        } finally {
+            $testCase->stopSpan();
+        }
     }
 }

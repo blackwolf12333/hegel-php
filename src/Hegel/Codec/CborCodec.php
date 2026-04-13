@@ -54,6 +54,7 @@ final class CborCodec
         if ($object instanceof ListObject || $object instanceof IndefiniteLengthListObject) {
             $result = [];
             foreach ($object as $item) {
+                assert($item instanceof CBORObject);
                 $result[] = self::normalize($item);
             }
             return $result;
@@ -62,9 +63,10 @@ final class CborCodec
         if ($object instanceof MapObject || $object instanceof IndefiniteLengthMapObject) {
             $result = [];
             foreach ($object as $mapItem) {
+                assert($mapItem instanceof \CBOR\MapItem);
                 $key = self::normalize($mapItem->getKey());
-                $value = self::normalize($mapItem->getValue());
-                $result[$key] = $value;
+                assert(is_string($key) || is_int($key));
+                $result[$key] = self::normalize($mapItem->getValue());
             }
             return $result;
         }

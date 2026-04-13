@@ -29,6 +29,12 @@ use Hegel\TestCase as HegelTestCase;
  */
 trait HegelTrait
 {
+    abstract public function name(): string;
+
+    abstract public static function fail(string $message = ''): never;
+
+    abstract public function addToAssertionCount(int $count): void;
+
     /**
      * Run a property-based test.
      *
@@ -47,9 +53,10 @@ trait HegelTrait
         // Read #[Property] attribute from calling test method
         $property = $this->resolvePropertyAttribute();
 
-        $testCases ??= $property->testCases ?? 100;
+        $testCases ??= $property?->testCases ?? 100;
         $seed ??= $property?->seed;
-        $suppressHealthChecks ??= $property->suppressHealthChecks ?? [];
+        /** @var list<string> $healthChecks */
+        $healthChecks = $suppressHealthChecks ?? $property?->suppressHealthChecks ?? [];
 
         $conn = $connection ?? Session::global()->connection();
         $runner = new Runner($conn);
@@ -58,7 +65,7 @@ trait HegelTrait
             testFn: $testFn,
             testCases: $testCases,
             seed: $seed,
-            suppressHealthCheck: $suppressHealthChecks,
+            suppressHealthCheck: $healthChecks,
             noteFn: function (string $msg): void {
                 fwrite(STDERR, "[hegel] {$msg}\n");
             },

@@ -107,6 +107,7 @@ final class TestCase
         }
 
         $id = $this->stream->requestCbor($data);
+        assert(is_int($id) || is_string($id));
 
         return new Collection($id, $this->stream);
     }

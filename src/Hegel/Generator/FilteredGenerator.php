@@ -28,10 +28,10 @@ final class FilteredGenerator implements Generator
         $testCase->startSpan(SpanLabel::Filter->value);
 
         for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
-            $value = $this->inner->draw($testCase);
-            if (($this->predicate)($value)) {
+            $drawn = $this->inner->draw($testCase);
+            if (($this->predicate)($drawn)) {
                 $testCase->stopSpan();
-                return $value;
+                return $drawn;
             }
         }
 

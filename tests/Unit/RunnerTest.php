@@ -16,8 +16,12 @@ use PHPUnit\Framework\TestCase;
 
 final class RunnerTest extends TestCase
 {
+    /**
+     * @param resource $sock
+     */
     private function reply(mixed $sock, int $streamId, int $messageId, mixed $payload): void
     {
+        assert(is_resource($sock));
         PacketWriter::write($sock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -26,8 +30,12 @@ final class RunnerTest extends TestCase
         ));
     }
 
+    /**
+     * @param resource $sock
+     */
     private function serverRequest(mixed $sock, int $streamId, int $messageId, mixed $payload): void
     {
+        assert(is_resource($sock));
         PacketWriter::write($sock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -38,6 +46,7 @@ final class RunnerTest extends TestCase
 
     /**
      * Read all available packets from a socket (with a short timeout).
+     * @param resource $sock
      * @return list<Packet>
      */
     private function drainPackets(mixed $sock): array
@@ -60,7 +69,8 @@ final class RunnerTest extends TestCase
 
     /**
      * Find mark_complete commands in a list of packets for a given stream.
-     * @return list<array<string,mixed>>
+     * @param list<Packet> $packets
+     * @return list<array<array-key, mixed>>
      */
     private function findMarkComplete(array $packets, int $streamId): array
     {
@@ -84,6 +94,7 @@ final class RunnerTest extends TestCase
     public function runner_valid_test_sends_mark_complete_valid(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false);
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -114,7 +125,7 @@ final class RunnerTest extends TestCase
         $runner = new Runner($conn);
         $result = $runner->run(
             testFn: function (HegelTestCase $tc): void {
-                $n = $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
+                $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
             },
             testCases: 1,
         );
@@ -137,6 +148,7 @@ final class RunnerTest extends TestCase
     public function runner_assertion_failure_sends_mark_complete_interesting(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false);
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -174,7 +186,7 @@ final class RunnerTest extends TestCase
         $runner = new Runner($conn);
         $result = $runner->run(
             testFn: function (HegelTestCase $tc): void {
-                $n = $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
+                $n = (int) $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
                 if ($n >= 50) {
                     throw new \RuntimeException("Value {$n} is >= 50");
                 }
@@ -199,6 +211,7 @@ final class RunnerTest extends TestCase
     public function runner_assume_rejected_sends_mark_complete_invalid(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false);
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -247,6 +260,7 @@ final class RunnerTest extends TestCase
     public function runner_handles_health_check_failure(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false);
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -268,7 +282,7 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: fn(HegelTestCase $tc): mixed => null,
+            testFn: fn(HegelTestCase $_tc): mixed => null,
             testCases: 100,
         );
 
@@ -283,6 +297,7 @@ final class RunnerTest extends TestCase
     public function runner_handles_flaky_detection(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false);
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -304,7 +319,7 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: fn(HegelTestCase $tc): mixed => null,
+            testFn: fn(HegelTestCase $_tc): mixed => null,
             testCases: 10,
         );
 

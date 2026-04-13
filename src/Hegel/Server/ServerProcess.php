@@ -33,8 +33,11 @@ final class ServerProcess
             2 => ['pipe', 'w'], // stderr (discard)
         ];
 
-        $env = array_merge(getenv(), ['PYTHONUNBUFFERED' => '1']);
+        $currentEnv = getenv();
+        assert(is_array($currentEnv));
+        $env = array_merge($currentEnv, ['PYTHONUNBUFFERED' => '1']);
 
+        $pipes = [];
         $process = proc_open($command, $descriptors, $pipes, null, $env);
         if (!$process) {
             throw new ConnectionException("Failed to start hegel-core server: {$command}");
@@ -86,15 +89,19 @@ final class ServerProcess
             return;
         }
 
-        try {
-            fclose($this->stdin);
-        } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+        if ($this->stdin !== null) {
+            try {
+                fclose($this->stdin);
+            } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+            }
         }
         $this->stdin = null;
 
-        try {
-            fclose($this->stdout);
-        } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+        if ($this->stdout !== null) {
+            try {
+                fclose($this->stdout);
+            } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+            }
         }
         $this->stdout = null;
 

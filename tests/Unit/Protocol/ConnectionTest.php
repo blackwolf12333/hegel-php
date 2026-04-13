@@ -22,7 +22,7 @@ final class ConnectionTest extends TestCase
     private function createSocketPair(): array
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair, 'stream_socket_pair() failed');
+        assert($pair !== false, 'stream_socket_pair() failed');
         return $pair;
     }
 
@@ -98,6 +98,7 @@ final class ConnectionTest extends TestCase
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
         $decoded = CborCodec::decode($packet->payload);
+        assert(is_array($decoded));
         $this->assertSame('generate', $decoded['command']);
 
         // Server sends reply
@@ -181,7 +182,9 @@ final class ConnectionTest extends TestCase
         $result1 = $s1->receiveReply($msg1);
         $result2 = $s2->receiveReply($msg2);
 
+        assert(is_bool($result1));
         $this->assertTrue($result1);
+        assert(is_int($result2));
         $this->assertSame(99, $result2);
 
         fclose($clientSock);
@@ -228,6 +231,7 @@ final class ConnectionTest extends TestCase
         ));
 
         [$requestMsgId, $request] = $stream->receiveRequest();
+        assert(is_array($request));
         $this->assertSame(1, $requestMsgId);
         $this->assertSame('mark_complete', $request['command']);
 

@@ -49,20 +49,29 @@ final class Generators
         return new BasicGenerator(['type' => 'constant', 'value' => $value]);
     }
 
-    /**
-     * @param non-empty-array<mixed> $values
-     */
     public static function sampledFrom(array $values): BasicGenerator
     {
         if ($values === []) {
             throw new \InvalidArgumentException('sampledFrom requires at least one value');
         }
-        $indexedValues = array_values($values);
+        $transform = self::makeSampledFromTransform(array_values($values));
         return new BasicGenerator(
-            schema: ['type' => 'integer', 'min_value' => 0, 'max_value' => count($indexedValues) - 1],
-            transform: fn(mixed $index): mixed => $indexedValues[(int) $index],
+            schema: ['type' => 'integer', 'min_value' => 0, 'max_value' => count($values) - 1],
+            transform: $transform,
             spanLabel: SpanLabel::SampledFrom,
         );
+    }
+
+    /**
+     * @param list<mixed> $indexed
+     * @return \Closure(mixed): mixed
+     */
+    private static function makeSampledFromTransform(array $indexed): \Closure
+    {
+        return function (mixed $index) use ($indexed): mixed {
+            assert(is_int($index));
+            return $indexed[$index];
+        };
     }
 
     public static function fromRegex(string $pattern): BasicGenerator
@@ -112,7 +121,10 @@ final class Generators
 
         return new BasicGenerator(
             schema: ['type' => 'one_of', 'generators' => $branches],
-            transform: fn(mixed $result): mixed => $result[1],
+            transform: function (mixed $result): mixed {
+                assert(is_array($result));
+                return $result[1];
+            },
             spanLabel: SpanLabel::OneOf,
         );
     }
@@ -139,7 +151,10 @@ final class Generators
                     ],
                 ],
             ],
-            transform: fn(mixed $result): mixed => $result[0] === 0 ? null : $result[1],
+            transform: function (mixed $result): mixed {
+                assert(is_array($result));
+                return $result[0] === 0 ? null : $result[1];
+            },
             spanLabel: SpanLabel::Optional,
         );
     }

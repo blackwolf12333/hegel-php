@@ -52,18 +52,22 @@ final class DictGenerator implements SchemaGenerator
         return $schema;
     }
 
+    /**
+     * @return array<string|int, mixed>
+     */
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
         $result = $testCase->generateFromSchema($this->schema());
+        assert(is_array($result));
         // Dict values come back as [[k,v], [k,v], ...], convert to assoc array
-        if (is_array($result)) {
-            $dict = [];
-            foreach ($result as $pair) {
-                $dict[$pair[0]] = $pair[1];
-            }
-            return $dict;
+        $dict = [];
+        foreach ($result as $pair) {
+            assert(is_array($pair));
+            $key = $pair[0];
+            assert(is_string($key) || is_int($key));
+            $dict[$key] = $pair[1];
         }
-        return $result;
+        return $dict;
     }
 }

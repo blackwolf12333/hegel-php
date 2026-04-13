@@ -33,7 +33,7 @@ final class EndToEndTest extends TestCase
     public function integers_self_equality(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $n = $tc->draw(gen::integers(-1000, 1000));
+            $n = (int) $tc->draw(gen::integers(-1000, 1000));
             $this->assertSame($n, $n);
         });
     }
@@ -46,7 +46,7 @@ final class EndToEndTest extends TestCase
 
         $result = $runner->run(
             testFn: function (HegelTestCase $tc): void {
-                $n = $tc->draw(gen::integers(0, 100));
+                $n = (int) $tc->draw(gen::integers(0, 100));
                 if ($n >= 50) {
                     throw new \RuntimeException("Value {$n} is >= 50");
                 }
@@ -64,8 +64,8 @@ final class EndToEndTest extends TestCase
     public function addition_is_commutative(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $x = $tc->draw(gen::integers(-1000, 1000));
-            $y = $tc->draw(gen::integers(-1000, 1000));
+            $x = (int) $tc->draw(gen::integers(-1000, 1000));
+            $y = (int) $tc->draw(gen::integers(-1000, 1000));
             $this->assertSame($x + $y, $y + $x);
         });
     }
@@ -74,7 +74,7 @@ final class EndToEndTest extends TestCase
     public function assume_filters_correctly(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $n = $tc->draw(gen::integers(0, 100));
+            $n = (int) $tc->draw(gen::integers(0, 100));
             if ($n <= 0) {
                 $tc->reject();
             }
@@ -86,7 +86,7 @@ final class EndToEndTest extends TestCase
     public function text_generation_produces_strings(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $text = $tc->draw(gen::text(0, 100));
+            $text = (string) $tc->draw(gen::text(0, 100));
             $this->assertIsString($text);
         });
     }
@@ -95,7 +95,7 @@ final class EndToEndTest extends TestCase
     public function list_generation_with_bounds(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $list = $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
+            $list = (array) $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
             $this->assertIsArray($list);
             $this->assertGreaterThanOrEqual(1, count($list));
             $this->assertLessThanOrEqual(5, count($list));
@@ -106,7 +106,7 @@ final class EndToEndTest extends TestCase
     public function boolean_generation(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $b = $tc->draw(gen::booleans());
+            $b = (bool) $tc->draw(gen::booleans());
             $this->assertIsBool($b);
         });
     }
@@ -115,7 +115,7 @@ final class EndToEndTest extends TestCase
     public function sampled_from_returns_element(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $val = $tc->draw(gen::sampledFrom(['a', 'b', 'c']));
+            $val = (string) $tc->draw(gen::sampledFrom(['a', 'b', 'c']));
             $this->assertContains($val, ['a', 'b', 'c']);
         });
     }
@@ -124,7 +124,7 @@ final class EndToEndTest extends TestCase
     public function email_generation_contains_at_sign(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $email = $tc->draw(gen::emails());
+            $email = (string) $tc->draw(gen::emails());
             $this->assertStringContainsString('@', $email);
         });
     }
@@ -133,7 +133,7 @@ final class EndToEndTest extends TestCase
     public function sort_is_idempotent(): void
     {
         $this->check(function (HegelTestCase $tc): void {
-            $list = $tc->draw(gen::lists(gen::integers(0, 100)));
+            $list = (array) $tc->draw(gen::lists(gen::integers(0, 100)));
             sort($list);
             $sorted = $list;
             sort($sorted);

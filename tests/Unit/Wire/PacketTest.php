@@ -24,28 +24,38 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
+        assert(is_string($data));
         fclose($stream);
 
         // 20 byte header + 5 byte payload + 1 byte terminator = 26
         $this->assertSame(26, strlen($data));
 
         // Magic bytes
-        $magic = unpack('N', substr($data, 0, 4))[1];
+        $unpacked = unpack('N', substr($data, 0, 4));
+        assert($unpacked !== false);
+        $magic = $unpacked[1];
         $this->assertSame(0x4845474C, $magic);
 
         // Stream ID
-        $streamId = unpack('N', substr($data, 8, 4))[1];
+        $unpacked = unpack('N', substr($data, 8, 4));
+        assert($unpacked !== false);
+        $streamId = $unpacked[1];
         $this->assertSame(3, $streamId);
 
         // Message ID (no reply bit)
-        $messageId = unpack('N', substr($data, 12, 4))[1];
+        $unpacked = unpack('N', substr($data, 12, 4));
+        assert($unpacked !== false);
+        $messageId = $unpacked[1];
         $this->assertSame(1, $messageId);
 
         // Payload length
-        $payloadLen = unpack('N', substr($data, 16, 4))[1];
+        $unpacked = unpack('N', substr($data, 16, 4));
+        assert($unpacked !== false);
+        $payloadLen = $unpacked[1];
         $this->assertSame(5, $payloadLen);
     }
 
@@ -60,13 +70,17 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
+        assert(is_string($data));
         fclose($stream);
 
         // Extract checksum from header
-        $checksum = unpack('N', substr($data, 4, 4))[1];
+        $unpacked = unpack('N', substr($data, 4, 4));
+        assert($unpacked !== false);
+        $checksum = $unpacked[1];
 
         // Compute expected: header with checksum zeroed + payload
         $headerWithZeroed = substr($data, 0, 4) . "\x00\x00\x00\x00" . substr($data, 8, 12);
@@ -88,9 +102,11 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
+        assert(is_string($data));
         fclose($stream);
 
         $this->assertSame(0x0A, ord($data[strlen($data) - 1]));
@@ -107,6 +123,7 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -130,6 +147,7 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -152,6 +170,7 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -167,6 +186,7 @@ final class PacketTest extends TestCase
     public function read_rejects_bad_magic(): void
     {
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         // Write a header with wrong magic
         fwrite($stream, pack('N', 0xDEADBEEF)); // bad magic
         fwrite($stream, pack('N', 0)); // checksum
@@ -193,14 +213,17 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
+        assert(is_string($data));
 
         // Corrupt checksum byte
         $data[4] = chr(ord($data[4]) ^ 0xFF);
 
         $corrupted = fopen('php://memory', 'r+');
+        assert($corrupted !== false);
         fwrite($corrupted, $data);
         rewind($corrupted);
 
@@ -221,14 +244,17 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
+        assert(is_string($data));
 
         // Replace terminator (last byte)
         $data[strlen($data) - 1] = "\xFF";
 
         $corrupted = fopen('php://memory', 'r+');
+        assert($corrupted !== false);
         fwrite($corrupted, $data);
         rewind($corrupted);
 
@@ -268,6 +294,7 @@ final class PacketTest extends TestCase
         $original = Packet::closeStream(streamId: 7);
 
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -282,6 +309,7 @@ final class PacketTest extends TestCase
     public function read_returns_null_on_eof(): void
     {
         $stream = fopen('php://memory', 'r+');
+        assert($stream !== false);
         // Empty stream
         $result = PacketReader::read($stream);
         fclose($stream);
