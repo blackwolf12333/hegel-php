@@ -28,7 +28,7 @@ final class MySortTest extends TestCase
     #[Test, Property]
     public function matches_builtin(TC $tc): void
     {
-        $list1 = (array) $tc->draw(gen::lists(gen::integers(-100, 100)));
+        $list1 = (array) $tc->draw(gen::lists(gen::integers()));
         $list2 = mySort($list1);
         sort($list1);
         $this->assertEquals($list1, $list2);

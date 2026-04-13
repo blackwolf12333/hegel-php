@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hegel\Codec;
 
+use CBOR\ByteStringObject;
 use CBOR\CBORObject;
 use CBOR\Decoder;
 use CBOR\Encoder;
@@ -15,13 +16,56 @@ use CBOR\NegativeIntegerObject;
 use CBOR\Normalizable;
 use CBOR\StringStream;
 use CBOR\Tag;
+use CBOR\Tag\NegativeBigIntegerTag;
+use CBOR\Tag\UnsignedBigIntegerTag;
 use CBOR\UnsignedIntegerObject;
 
 final class CborCodec
 {
+    private const CBOR_UINT32_MAX = 0xFFFF_FFFE;
+
     public static function encode(mixed $value): string
     {
-        return new Encoder()->encode($value);
+        return new Encoder()->encode(self::prepareLargeInts($value));
+    }
+
+    /**
+     * Recursively convert integers that exceed CBOR's 32-bit range into
+     * big-integer tag objects so the encoder doesn't throw.
+     */
+    private static function prepareLargeInts(mixed $value): mixed
+    {
+        if (is_int($value)) {
+            if ($value >= 0 && $value > self::CBOR_UINT32_MAX) {
+                return UnsignedBigIntegerTag::create(
+                    ByteStringObject::create(self::intToBytes($value)),
+                );
+            }
+            if ($value < 0 && (-1 - $value) > self::CBOR_UINT32_MAX) {
+                return NegativeBigIntegerTag::create(
+                    ByteStringObject::create(self::intToBytes(-1 - $value)),
+                );
+            }
+            return $value;
+        }
+
+        if (is_array($value)) {
+            return array_map(self::prepareLargeInts(...), $value);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Convert a non-negative integer to a minimal big-endian byte string.
+     */
+    private static function intToBytes(int $value): string
+    {
+        $hex = dechex($value);
+        if (strlen($hex) % 2 !== 0) {
+            $hex = '0' . $hex;
+        }
+        return hex2bin($hex);
     }
 
     public static function decode(string $data): mixed
@@ -42,6 +86,11 @@ final class CborCodec
     {
         // Integers - cbor-php normalize() returns strings, we want ints
         if ($object instanceof UnsignedIntegerObject || $object instanceof NegativeIntegerObject) {
+            return (int) $object->normalize();
+        }
+
+        // Big integer tags - normalize() returns string, cast to int
+        if ($object instanceof UnsignedBigIntegerTag || $object instanceof NegativeBigIntegerTag) {
             return (int) $object->normalize();
         }
 

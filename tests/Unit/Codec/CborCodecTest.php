@@ -104,4 +104,24 @@ final class CborCodecTest extends TestCase
         $result = CborCodec::decode(CborCodec::encode($data));
         $this->assertSame([], $result);
     }
+
+    #[Test]
+    public function roundtrip_large_positive_integer(): void
+    {
+        $this->assertSame(PHP_INT_MAX, CborCodec::decode(CborCodec::encode(PHP_INT_MAX)));
+    }
+
+    #[Test]
+    public function roundtrip_large_negative_integer(): void
+    {
+        $this->assertSame(PHP_INT_MIN, CborCodec::decode(CborCodec::encode(PHP_INT_MIN)));
+    }
+
+    #[Test]
+    public function roundtrip_map_with_large_integers(): void
+    {
+        $data = ['min_value' => PHP_INT_MIN, 'max_value' => PHP_INT_MAX];
+        $result = CborCodec::decode(CborCodec::encode($data));
+        $this->assertSame($data, $result);
+    }
 }
