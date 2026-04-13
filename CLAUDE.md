@@ -41,7 +41,7 @@ Integration tests require `uv` (Python package manager) to be installed. The ser
 ### Layer Stack
 
 ```
-PHPUnit Test → HegelTrait::check() → Runner → Connection → Stream → Wire (Packet/Reader/Writer) → ServerProcess (stdio)
+PHPUnit Test → HegelTrait::invokeTestMethod() → Runner → Connection → Stream → Wire (Packet/Reader/Writer) → ServerProcess (stdio)
                                                               ↕
                                                           CborCodec
 ```
@@ -60,7 +60,7 @@ PHPUnit Test → HegelTrait::check() → Runner → Connection → Stream → Wi
 
 **Server** (`src/Hegel/Server/`) — `ServerProcess` launches `hegel-core==0.4.0` via `uv tool run`. `Session` is a global singleton providing lazy server lifecycle.
 
-**PHPUnit** (`src/Hegel/PHPUnit/`) — `HegelTrait` provides `check(\Closure $testFn)`. `#[Property]` attribute configures test cases, seed, and health check suppression. PHPUnit 12's `runTest()` is private and `runBare()` is final, so the trait approach with explicit `check()` calls is necessary.
+**PHPUnit** (`src/Hegel/PHPUnit/`) — `HegelTrait` overrides `invokeTestMethod()` (new in PHPUnit 13) to intercept methods annotated with `#[Property]`. The Hegel `TestCase` is automatically injected as the first argument; DataProvider/TestWith arguments follow after it.
 
 ### Protocol Details
 
