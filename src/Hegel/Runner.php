@@ -7,8 +7,11 @@ namespace Hegel;
 use Hegel\Exception\AssumeRejectedException;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
-use Hegel\Exception\ServerErrorType;
+use Hegel\Protocol\Command\MarkCompleteCommand;
+use Hegel\Protocol\Command\RunTestCommand;
 use Hegel\Protocol\Connection;
+use Hegel\Protocol\Event\TestCaseEvent;
+use Hegel\Protocol\Event\TestDoneEvent;
 use Hegel\Protocol\Stream;
 
 final class Runner
@@ -38,19 +41,12 @@ final class Runner
 
         // Send run_test on control stream
         $ctrl = $this->connection->controlStream();
-        $runTestData = [
-            'command' => 'run_test',
-            'test_cases' => $testCases,
-            'stream_id' => $testStreamId,
-        ];
-        if ($seed !== null) {
-            $runTestData['seed'] = $seed;
-        }
-        if ($suppressHealthCheck !== []) {
-            $runTestData['suppress_health_check'] = $suppressHealthCheck;
-        }
-
-        $ctrl->requestCbor($runTestData);
+        $ctrl->requestCbor(new RunTestCommand(
+            testCases: $testCases,
+            streamId: $testStreamId,
+            seed: $seed,
+            suppressHealthCheck: $suppressHealthCheck,
+        ));
 
         // Event loop on test stream
         $finalErrors = [];
@@ -61,7 +57,8 @@ final class Runner
             $eventName = $event['event'] ?? null;
 
             if ($eventName === 'test_case') {
-                $this->handleTestCase($event, $testStream, $msgId, $testFn, $noteFn, $finalErrors);
+                $testCaseEvent = TestCaseEvent::fromArray($event);
+                $this->handleTestCase($testCaseEvent, $testStream, $msgId, $testFn, $noteFn, $finalErrors);
                 continue;
             }
 
@@ -69,47 +66,42 @@ final class Runner
                 continue;
             }
 
-            $results = $event['results'] ?? [];
-            assert(is_array($results));
+            $testDoneEvent = TestDoneEvent::fromArray($event);
             $testStream->sendReply($msgId, ['result' => true]);
 
-            $nInteresting = (int) ($results['interesting_test_cases'] ?? 0);
-            $this->handleReplayCases($nInteresting, $testStream, $testFn, $noteFn, $finalErrors);
+            $this->handleReplayCases($testDoneEvent->interestingTestCases, $testStream, $testFn, $noteFn, $finalErrors);
             break;
         }
 
         $testStream->close();
 
         return new RunResult(
-            passed: (bool) ($results['passed'] ?? true),
-            testCases: (int) ($results['test_cases'] ?? 0),
-            seed: (string) ($results['seed'] ?? ''),
-            error: isset($results['error']) ? (string) $results['error'] : null,
-            healthCheckFailure: isset($results['health_check_failure']) ? (string) $results['health_check_failure'] : null,
-            flaky: isset($results['flaky']) ? (string) $results['flaky'] : null,
+            passed: $testDoneEvent->passed,
+            testCases: $testDoneEvent->testCases,
+            seed: $testDoneEvent->seed,
+            error: $testDoneEvent->error,
+            healthCheckFailure: $testDoneEvent->healthCheckFailure,
+            flaky: $testDoneEvent->flaky,
             finalErrors: $finalErrors,
         );
     }
 
     /**
-     * @param array<array-key, mixed> $event
      * @param list<\Throwable> $finalErrors
      */
     private function handleTestCase(
-        array $event,
+        TestCaseEvent $event,
         Stream $testStream,
         int $msgId,
         \Closure $testFn,
         null|\Closure $noteFn,
         array &$finalErrors,
     ): void {
-        $caseStreamId = (int) $event['stream_id'];
-        $isFinal = (bool) ($event['is_final'] ?? false);
-        $phase = $isFinal ? TestPhase::Final : TestPhase::Exploration;
+        $phase = $event->isFinal ? TestPhase::Final : TestPhase::Exploration;
 
         $testStream->sendReply($msgId, ['result' => null]);
 
-        $error = $this->runTestCase($caseStreamId, $testFn, $phase, $noteFn);
+        $error = $this->runTestCase($event->streamId, $testFn, $phase, $noteFn);
 
         if ($phase === TestPhase::Final && $error !== null) {
             $finalErrors[] = $error;
@@ -134,10 +126,10 @@ final class Runner
                 continue;
             }
 
-            $caseStreamId = (int) $replayEvent['stream_id'];
+            $event = TestCaseEvent::fromArray($replayEvent);
             $testStream->sendReply($replayMsgId, ['result' => null]);
 
-            $error = $this->runTestCase($caseStreamId, $testFn, TestPhase::Final, $noteFn);
+            $error = $this->runTestCase($event->streamId, $testFn, TestPhase::Final, $noteFn);
             if ($error !== null) {
                 $finalErrors[] = $error;
             }
@@ -158,15 +150,14 @@ final class Runner
         $caseStream = $this->connection->connectStream($caseStreamId);
         $tc = new TestCase($caseStream, $phase, $noteFn);
 
-        [$status, $origin, $error, $aborted] = $this->executeTestFn($testFn, $tc);
+        $outcome = $this->executeTestFn($testFn, $tc);
 
-        if (!$aborted) {
+        if (!$outcome->aborted) {
             try {
-                $caseStream->requestCbor([
-                    'command' => 'mark_complete',
-                    'status' => $status,
-                    'origin' => $origin,
-                ]);
+                $caseStream->requestCbor(new MarkCompleteCommand(
+                    status: $outcome->status,
+                    origin: $outcome->origin,
+                ));
             } catch (ConnectionException) { // @mago-expect lint:no-empty-catch-clause
             }
         }
@@ -176,26 +167,23 @@ final class Runner
         } catch (\Throwable) { // @mago-expect lint:no-empty-catch-clause
         }
 
-        return $error;
+        return $outcome->error;
     }
 
-    /**
-     * @return array{string, string|null, \Throwable|null, bool} [status, origin, error, aborted]
-     */
-    private function executeTestFn(\Closure $testFn, TestCase $tc): array
+    private function executeTestFn(\Closure $testFn, TestCase $tc): TestOutcome
     {
         try {
             $testFn($tc);
-            return ['VALID', null, null, false];
+            return new TestOutcome('VALID', null, null, false);
         } catch (AssumeRejectedException) {
-            return ['INVALID', null, null, false];
+            return new TestOutcome('INVALID', null, null, false);
         } catch (DataExhaustedException) {
-            return ['VALID', null, null, true];
+            return new TestOutcome('VALID', null, null, true);
         } catch (\Throwable $e) {
             if ($this->isExpectedTermination($e)) {
-                return ['VALID', null, null, true];
+                return new TestOutcome('VALID', null, null, true);
             }
-            return ['INTERESTING', $this->formatOrigin($e), $e, false];
+            return new TestOutcome('INTERESTING', $this->formatOrigin($e), $e, false);
         }
     }
 

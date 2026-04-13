@@ -6,6 +6,7 @@ namespace Hegel\Protocol;
 
 use Hegel\Codec\CborCodec;
 use Hegel\Exception\ConnectionException;
+use Hegel\Protocol\Command\Command;
 use Hegel\Wire\Packet;
 
 final class Stream
@@ -53,7 +54,8 @@ final class Stream
      */
     public function sendRequest(mixed $data): int
     {
-        return $this->sendRawRequest(CborCodec::encode($data));
+        $payload = $data instanceof Command ? $data->toArray() : $data;
+        return $this->sendRawRequest(CborCodec::encode($payload));
     }
 
     /**

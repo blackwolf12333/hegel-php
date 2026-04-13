@@ -9,6 +9,11 @@ use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
 use Hegel\Exception\ServerErrorType;
 use Hegel\Generator\Generator;
+use Hegel\Protocol\Command\GenerateCommand;
+use Hegel\Protocol\Command\NewCollectionCommand;
+use Hegel\Protocol\Command\StartSpanCommand;
+use Hegel\Protocol\Command\StopSpanCommand;
+use Hegel\Protocol\Command\TargetCommand;
 use Hegel\Protocol\Stream;
 
 final class TestCase
@@ -48,11 +53,7 @@ final class TestCase
 
     public function target(float $value, string $label): void
     {
-        $this->stream->requestCbor([
-            'command' => 'target',
-            'value' => $value,
-            'label' => $label,
-        ]);
+        $this->stream->requestCbor(new TargetCommand($value, $label));
     }
 
     /**
@@ -63,10 +64,7 @@ final class TestCase
     public function generateFromSchema(array $schema): mixed
     {
         try {
-            return $this->stream->requestCbor([
-                'command' => 'generate',
-                'schema' => $schema,
-            ]);
+            return $this->stream->requestCbor(new GenerateCommand($schema));
         } catch (ConnectionException $e) {
             if ($e->serverErrorType === ServerErrorType::StopTest) {
                 throw new DataExhaustedException('Data exhausted', 0, $e);
@@ -77,36 +75,22 @@ final class TestCase
 
     public function startSpan(int $label): void
     {
-        $this->stream->requestCbor([
-            'command' => 'start_span',
-            'label' => $label,
-        ]);
+        $this->stream->requestCbor(new StartSpanCommand($label));
     }
 
     public function stopSpan(): void
     {
-        $this->stream->requestCbor([
-            'command' => 'stop_span',
-            'discard' => false,
-        ]);
+        $this->stream->requestCbor(new StopSpanCommand(false));
     }
 
     public function discardSpan(): void
     {
-        $this->stream->requestCbor([
-            'command' => 'stop_span',
-            'discard' => true,
-        ]);
+        $this->stream->requestCbor(new StopSpanCommand(true));
     }
 
     public function newCollection(int $minSize, null|int $maxSize): Collection
     {
-        $data = ['command' => 'new_collection', 'min_size' => $minSize];
-        if ($maxSize !== null) {
-            $data['max_size'] = $maxSize;
-        }
-
-        $id = $this->stream->requestCbor($data);
+        $id = $this->stream->requestCbor(new NewCollectionCommand($minSize, $maxSize));
         assert(is_int($id) || is_string($id));
 
         return new Collection($id, $this->stream);

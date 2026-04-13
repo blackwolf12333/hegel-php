@@ -92,7 +92,8 @@ final class ServerProcess
         if ($this->stdin !== null) {
             try {
                 fclose($this->stdin);
-            } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+            } catch (\Throwable) {
+                // @mago-expect lint:no-empty-catch-clause
             }
         }
         $this->stdin = null;
@@ -100,7 +101,8 @@ final class ServerProcess
         if ($this->stdout !== null) {
             try {
                 fclose($this->stdout);
-            } catch (\Throwable) {// @mago-expect lint:no-empty-catch-clause
+            } catch (\Throwable) {
+                // @mago-expect lint:no-empty-catch-clause
             }
         }
         $this->stdout = null;
