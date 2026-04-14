@@ -10,6 +10,7 @@ use Hegel\Runner;
 use Hegel\RunResult;
 use Hegel\Server\Session;
 use Hegel\TestCase as TC;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Trait for PHPUnit test cases that use Hegel property-based testing.
@@ -24,6 +25,8 @@ use Hegel\TestCase as TC;
  *       $y = $tc->draw(gen::integers(-1000, 1000));
  *       $this->assertSame($x + $y, $y + $x);
  *   }
+ *
+ * @mixin TestCase
  */
 trait HegelTrait
 {

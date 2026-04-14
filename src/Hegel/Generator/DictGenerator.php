@@ -9,13 +9,13 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class DictGenerator implements SchemaGenerator
+final class DictGenerator implements Generator
 {
     use GeneratorCombinatorsTrait;
 
     public function __construct(
-        private SchemaGenerator $keys,
-        private SchemaGenerator $values,
+        private Generator $keys,
+        private Generator $values,
         private int $minSize = 0,
         private null|int $maxSize = null,
     ) {}

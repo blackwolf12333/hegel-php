@@ -9,7 +9,7 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class FloatGenerator implements SchemaGenerator
+final class FloatGenerator implements Generator
 {
     use GeneratorCombinatorsTrait;
 

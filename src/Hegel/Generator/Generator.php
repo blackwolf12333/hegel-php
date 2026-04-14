@@ -9,7 +9,7 @@ use Hegel\TestCase;
 /**
  * @internal Do not implement directly. Use Generators factory methods.
  */
-interface Generator extends SchemaGenerator
+interface Generator
 {
     public function draw(TestCase $testCase): mixed;
 
@@ -18,4 +18,7 @@ interface Generator extends SchemaGenerator
     public function filter(\Closure $predicate): Generator;
 
     public function flatMap(\Closure $fn): Generator;
+
+    /** @return array<string, mixed> */
+    public function schema(): array;
 }
