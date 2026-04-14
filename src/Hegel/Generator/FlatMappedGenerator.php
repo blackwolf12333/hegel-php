@@ -31,4 +31,9 @@ final class FlatMappedGenerator implements Generator
             $testCase->stopSpan();
         }
     }
+
+    public function schema(): array
+    {
+        return $this->inner->schema();
+    }
 }

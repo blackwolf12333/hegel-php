@@ -38,4 +38,9 @@ final class FilteredGenerator implements Generator
         $testCase->discardSpan();
         throw new AssumeRejectedException(sprintf('Filter rejected %d consecutive attempts', self::MAX_ATTEMPTS));
     }
+
+    public function schema(): array
+    {
+        return $this->inner->schema();
+    }
 }

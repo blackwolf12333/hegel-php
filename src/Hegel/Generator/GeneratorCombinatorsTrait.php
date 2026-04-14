@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Hegel\Generator;
 
+use Hegel\SpanLabel;
+
 trait GeneratorCombinatorsTrait
 {
     public function map(\Closure $fn): Generator

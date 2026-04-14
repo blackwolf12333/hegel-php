@@ -9,7 +9,7 @@ use Hegel\TestCase;
 /**
  * @internal Do not implement directly. Use Generators factory methods.
  */
-interface Generator
+interface Generator extends SchemaGenerator
 {
     public function draw(TestCase $testCase): mixed;
 

@@ -29,4 +29,9 @@ final class MappedGenerator implements Generator
             $testCase->stopSpan();
         }
     }
+
+    public function schema(): array
+    {
+        return $this->inner->schema();
+    }
 }
