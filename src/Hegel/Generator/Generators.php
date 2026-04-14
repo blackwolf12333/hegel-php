@@ -109,14 +109,8 @@ final class Generators
         }
 
         $branches = [];
-        foreach ($generators as $i => $gen) {
-            $branches[] = [
-                'type' => 'tuple',
-                'elements' => [
-                    ['type' => 'constant', 'value' => $i],
-                    $gen->schema(),
-                ],
-            ];
+        foreach ($generators as $gen) {
+            $branches[] = $gen->schema();
         }
 
         return new BasicGenerator(
