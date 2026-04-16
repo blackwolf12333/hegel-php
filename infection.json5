@@ -1,0 +1,18 @@
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": [
+            "src"
+        ]
+    },
+    timeoutsAsEscaped: true,
+    logs: {
+        summary: "infection_summary.log",
+        text: "infection.log"
+    },
+    timeout: 60,
+    "staticAnalysisTool": "mago",
+    "mutators": {
+        "@default": true
+    }
+}

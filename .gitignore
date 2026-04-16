@@ -2,3 +2,5 @@
 /.idea/
 /.hegel/
 /.phpunit.result.cache
+infection.log
+infection_summary.log
