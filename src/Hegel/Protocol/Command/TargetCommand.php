@@ -11,6 +11,7 @@ final readonly class TargetCommand implements Command
         public string $label,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         return [

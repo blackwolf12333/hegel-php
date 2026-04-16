@@ -21,7 +21,7 @@ final class RunnerTest extends TestCase
      */
     private function reply(mixed $sock, int $streamId, int $messageId, mixed $payload): void
     {
-        assert(is_resource($sock));
+        assert(is_resource($sock), 'Expected a resource for socket');
         PacketWriter::write($sock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -35,7 +35,7 @@ final class RunnerTest extends TestCase
      */
     private function serverRequest(mixed $sock, int $streamId, int $messageId, mixed $payload): void
     {
-        assert(is_resource($sock));
+        assert(is_resource($sock), 'Expected a resource for socket');
         PacketWriter::write($sock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -76,15 +76,17 @@ final class RunnerTest extends TestCase
     {
         $results = [];
         foreach ($packets as $p) {
-            if ($p->streamId === $streamId && !$p->isReply && !$p->isCloseStream()) {
-                try {
-                    $decoded = CborCodec::decode($p->payload);
-                    if (is_array($decoded) && ($decoded['command'] ?? '') === 'mark_complete') {
-                        $results[] = $decoded;
-                    }
-                } catch (\Throwable $e) {
-                    error_log('[test] skipping non-decodable packet: ' . $e->getMessage());
+            if ($p->streamId !== $streamId || $p->isReply || $p->isCloseStream()) {
+                continue;
+            }
+            try {
+                /** @var mixed $decoded */
+                $decoded = CborCodec::decode($p->payload);
+                if (is_array($decoded) && ($decoded['command'] ?? '') === 'mark_complete') {
+                    $results[] = $decoded;
                 }
+            } catch (\Throwable $e) {
+                error_log('[test] skipping non-decodable packet: ' . $e->getMessage());
             }
         }
         return $results;
@@ -94,7 +96,7 @@ final class RunnerTest extends TestCase
     public function runner_valid_test_sends_mark_complete_valid(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair !== false);
+        assert($pair !== false, 'stream_socket_pair() failed');
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -124,7 +126,7 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: function (HegelTestCase $tc): void {
+            testFn: static function (HegelTestCase $tc): void {
                 $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
             },
             testCases: 1,
@@ -148,7 +150,7 @@ final class RunnerTest extends TestCase
     public function runner_assertion_failure_sends_mark_complete_interesting(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair !== false);
+        assert($pair !== false, 'stream_socket_pair() failed');
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -185,7 +187,7 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: function (HegelTestCase $tc): void {
+            testFn: static function (HegelTestCase $tc): void {
                 $n = (int) $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
                 if ($n >= 50) {
                     throw new \RuntimeException("Value {$n} is >= 50");
@@ -211,7 +213,7 @@ final class RunnerTest extends TestCase
     public function runner_assume_rejected_sends_mark_complete_invalid(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair !== false);
+        assert($pair !== false, 'stream_socket_pair() failed');
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -239,7 +241,7 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: function (HegelTestCase $tc): void {
+            testFn: static function (HegelTestCase $tc): void {
                 $tc->reject();
             },
             testCases: 1,
@@ -260,7 +262,7 @@ final class RunnerTest extends TestCase
     public function runner_handles_health_check_failure(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair !== false);
+        assert($pair !== false, 'stream_socket_pair() failed');
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -282,7 +284,7 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: fn(HegelTestCase $_tc): mixed => null,
+            testFn: static fn(HegelTestCase $_tc): mixed => null,
             testCases: 100,
         );
 
@@ -297,7 +299,7 @@ final class RunnerTest extends TestCase
     public function runner_handles_flaky_detection(): void
     {
         $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
-        assert($pair !== false);
+        assert($pair !== false, 'stream_socket_pair() failed');
         [$clientSock, $serverSock] = $pair;
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
@@ -319,12 +321,303 @@ final class RunnerTest extends TestCase
 
         $runner = new Runner($conn);
         $result = $runner->run(
-            testFn: fn(HegelTestCase $_tc): mixed => null,
+            testFn: static fn(HegelTestCase $_tc): mixed => null,
             testCases: 10,
         );
 
         $this->assertFalse($result->passed);
         $this->assertSame('Test gave inconsistent results', $result->flaky);
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // Mutants 69-70: default $testCases = 100
+    #[Test]
+    public function runner_default_test_cases_is_100(): void
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false, 'stream_socket_pair() failed');
+        [$clientSock, $serverSock] = $pair;
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $testStreamId = 3;
+
+        // ctrl reply for run_test command, then immediate test_done
+        $this->reply($serverSock, 0, 1, true);
+        $this->serverRequest($serverSock, $testStreamId, 1, [
+            'event' => 'test_done',
+            'results' => [
+                'passed' => true,
+                'test_cases' => 100,
+                'valid_test_cases' => 100,
+                'invalid_test_cases' => 0,
+                'interesting_test_cases' => 0,
+                'seed' => '0',
+            ],
+        ]);
+
+        $runner = new Runner($conn);
+        // Call run() without specifying testCases to exercise the default
+        $runner->run(testFn: static fn(HegelTestCase $_tc): mixed => null);
+
+        fclose($clientSock);
+        $packets = $this->drainPackets($serverSock);
+
+        // Find the run_test command on the control stream (streamId 0)
+        $runTestPackets = array_filter($packets, static fn(Packet $p): bool => $p->streamId === 0 && !$p->isReply && !$p->isCloseStream());
+
+        $this->assertNotEmpty($runTestPackets, 'Expected a run_test command on control stream');
+
+        /** @var mixed $decoded */
+        $decoded = CborCodec::decode(array_values($runTestPackets)[0]->payload);
+        assert(is_array($decoded), 'Decoded CBOR must be an array');
+        $this->assertSame('run_test', $decoded['command']);
+        $this->assertSame(100, $decoded['test_cases']);
+
+        fclose($serverSock);
+    }
+
+    // Mutants 71-72: test_done reply value
+    #[Test]
+    public function runner_sends_result_key_in_test_done_reply(): void
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false, 'stream_socket_pair() failed');
+        [$clientSock, $serverSock] = $pair;
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $testStreamId = 3;
+
+        $this->reply($serverSock, 0, 1, true);
+        $this->serverRequest($serverSock, $testStreamId, 1, [
+            'event' => 'test_done',
+            'results' => [
+                'passed' => true,
+                'test_cases' => 1,
+                'valid_test_cases' => 1,
+                'invalid_test_cases' => 0,
+                'interesting_test_cases' => 0,
+                'seed' => '0',
+            ],
+        ]);
+
+        $runner = new Runner($conn);
+        $runner->run(testFn: static fn(HegelTestCase $_tc): mixed => null, testCases: 1);
+
+        fclose($clientSock);
+        $packets = $this->drainPackets($serverSock);
+
+        // Find reply on testStreamId (the test_done ack)
+        $replies = array_filter($packets, static fn(Packet $p): bool => $p->streamId === $testStreamId && $p->isReply);
+
+        $this->assertNotEmpty($replies, 'Expected a reply for test_done on the test stream');
+
+        // Stream::sendReply() wraps the value in {"result": value}, so the wire payload is
+        // {"result": {"result": true}}. Decoding gives the outer map; the inner map is the actual reply.
+        /** @var mixed $decoded */
+        $decoded = CborCodec::decode(array_values($replies)[0]->payload);
+        assert(is_array($decoded), 'Decoded CBOR must be an array');
+        $this->assertArrayHasKey('result', $decoded, 'outer CBOR wrapper must have result key');
+        /** @var mixed $inner */
+        $inner = $decoded['result'];
+        assert(is_array($inner), 'Inner payload must be an array');
+        $this->assertArrayHasKey('result', $inner, 'test_done reply must contain result key');
+        $this->assertTrue($inner['result'], 'test_done reply result must be true');
+
+        fclose($serverSock);
+    }
+
+    // Mutant 73: $testStream->close() after event loop
+    #[Test]
+    public function runner_closes_test_stream_after_event_loop(): void
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false, 'stream_socket_pair() failed');
+        [$clientSock, $serverSock] = $pair;
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $testStreamId = 3;
+
+        $this->reply($serverSock, 0, 1, true);
+        $this->serverRequest($serverSock, $testStreamId, 1, [
+            'event' => 'test_done',
+            'results' => [
+                'passed' => true,
+                'test_cases' => 0,
+                'valid_test_cases' => 0,
+                'invalid_test_cases' => 0,
+                'interesting_test_cases' => 0,
+                'seed' => '0',
+            ],
+        ]);
+
+        $runner = new Runner($conn);
+        $runner->run(testFn: static fn(HegelTestCase $_tc): mixed => null, testCases: 1);
+
+        fclose($clientSock);
+        $packets = $this->drainPackets($serverSock);
+
+        $closePackets = array_filter($packets, static fn(Packet $p): bool => $p->streamId === $testStreamId && $p->isCloseStream());
+
+        $this->assertNotEmpty($closePackets, 'Runner must send a close-stream packet for the test stream');
+
+        fclose($serverSock);
+    }
+
+    // Mutants 74-75: test_case acknowledgement reply format
+    #[Test]
+    public function runner_sends_result_key_in_test_case_acknowledgement(): void
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false, 'stream_socket_pair() failed');
+        [$clientSock, $serverSock] = $pair;
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $testStreamId = 3;
+        $caseStreamId = 4;
+
+        $this->reply($serverSock, 0, 1, true);
+        $this->serverRequest($serverSock, $testStreamId, 1, [
+            'event' => 'test_case',
+            'stream_id' => $caseStreamId,
+            'is_final' => false,
+        ]);
+        $this->reply($serverSock, $caseStreamId, 1, ['result' => null]); // generate reply (not needed, no draw)
+        $this->reply($serverSock, $caseStreamId, 2, ['result' => null]); // mark_complete reply
+        $this->serverRequest($serverSock, $testStreamId, 2, [
+            'event' => 'test_done',
+            'results' => [
+                'passed' => true,
+                'test_cases' => 1,
+                'valid_test_cases' => 1,
+                'invalid_test_cases' => 0,
+                'interesting_test_cases' => 0,
+                'seed' => '0',
+            ],
+        ]);
+
+        $runner = new Runner($conn);
+        $runner->run(testFn: static fn(HegelTestCase $_tc): mixed => null, testCases: 1);
+
+        fclose($clientSock);
+        $packets = $this->drainPackets($serverSock);
+
+        // Find replies on the test stream (test_case ack has msgId=1, test_done ack has msgId=2)
+        $testStreamReplies = array_values(array_filter($packets, static fn(Packet $p): bool => $p->streamId === $testStreamId && $p->isReply));
+
+        // The first reply on testStreamId should be the test_case ack
+        $this->assertNotEmpty($testStreamReplies, 'Expected a reply for test_case on the test stream');
+
+        // Stream::sendReply() wraps the value in {"result": value}, so the wire payload is
+        // {"result": {"result": null}}. Decoding gives the outer map.
+        /** @var mixed $decoded */
+        $decoded = CborCodec::decode($testStreamReplies[0]->payload);
+        assert(is_array($decoded), 'Decoded CBOR must be an array');
+        $this->assertArrayHasKey('result', $decoded, 'outer CBOR wrapper must have result key');
+        /** @var mixed $inner */
+        $inner = $decoded['result'];
+        assert(is_array($inner), 'Inner payload must be an array');
+        $this->assertArrayHasKey('result', $inner, 'test_case ack must contain result key');
+        $this->assertNull($inner['result'], 'test_case ack result must be null');
+
+        fclose($serverSock);
+    }
+
+    // Mutant 76: $caseStream->close() in runTestCase
+    #[Test]
+    public function runner_closes_case_stream_after_test_case(): void
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false, 'stream_socket_pair() failed');
+        [$clientSock, $serverSock] = $pair;
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $testStreamId = 3;
+        $caseStreamId = 4;
+
+        $this->reply($serverSock, 0, 1, true);
+        $this->serverRequest($serverSock, $testStreamId, 1, [
+            'event' => 'test_case',
+            'stream_id' => $caseStreamId,
+            'is_final' => false,
+        ]);
+        $this->reply($serverSock, $caseStreamId, 1, ['result' => null]); // mark_complete reply
+        $this->serverRequest($serverSock, $testStreamId, 2, [
+            'event' => 'test_done',
+            'results' => [
+                'passed' => true,
+                'test_cases' => 1,
+                'valid_test_cases' => 1,
+                'invalid_test_cases' => 0,
+                'interesting_test_cases' => 0,
+                'seed' => '0',
+            ],
+        ]);
+
+        $runner = new Runner($conn);
+        $runner->run(testFn: static fn(HegelTestCase $_tc): mixed => null, testCases: 1);
+
+        fclose($clientSock);
+        $packets = $this->drainPackets($serverSock);
+
+        $closePackets = array_filter($packets, static fn(Packet $p): bool => $p->streamId === $caseStreamId && $p->isCloseStream());
+
+        $this->assertNotEmpty($closePackets, 'Runner must send a close-stream packet for each case stream');
+
+        fclose($serverSock);
+    }
+
+    // Mutant 77: expected termination ConnectionException treated as VALID, not INTERESTING
+    // We test this by throwing a ConnectionException with an expected-termination type directly
+    // from the test function (bypassing generateFromSchema which converts StopTest to DataExhaustedException).
+    #[Test]
+    public function runner_treats_expected_termination_connection_exception_as_valid(): void
+    {
+        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, 0);
+        assert($pair !== false, 'stream_socket_pair() failed');
+        [$clientSock, $serverSock] = $pair;
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $testStreamId = 3;
+        $caseStreamId = 4;
+
+        $this->reply($serverSock, 0, 1, true);
+        $this->serverRequest($serverSock, $testStreamId, 1, [
+            'event' => 'test_case',
+            'stream_id' => $caseStreamId,
+            'is_final' => false,
+        ]);
+        // mark_complete reply for the case stream
+        $this->reply($serverSock, $caseStreamId, 1, ['result' => null]);
+        $this->serverRequest($serverSock, $testStreamId, 2, [
+            'event' => 'test_done',
+            'results' => [
+                'passed' => true,
+                'test_cases' => 1,
+                'valid_test_cases' => 1,
+                'invalid_test_cases' => 0,
+                'interesting_test_cases' => 0,
+                'seed' => '0',
+            ],
+        ]);
+
+        $runner = new Runner($conn);
+        $result = $runner->run(
+            testFn: static function (HegelTestCase $_tc): void {
+                // Throw a ConnectionException with an expected-termination server error type directly.
+                // This goes through the isExpectedTermination() branch in executeTestFn.
+                throw new \Hegel\Exception\ConnectionException(
+                    message: 'expected termination',
+                    serverErrorType: \Hegel\Exception\ServerErrorType::Overflow,
+                );
+            },
+            testCases: 1,
+        );
+
+        // The ConnectionException with expected termination should produce VALID (aborted), not INTERESTING
+        $this->assertEmpty($result->finalErrors, 'Expected termination should not produce final errors');
+        $this->assertTrue($result->passed);
 
         fclose($clientSock);
         fclose($serverSock);

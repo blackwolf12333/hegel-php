@@ -58,14 +58,17 @@ final class DictGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
+        /** @var mixed $result */
         $result = $testCase->generateFromSchema($this->schema());
-        assert(is_array($result));
+        assert(is_array($result), 'Dict schema result must be an array');
         // Dict values come back as [[k,v], [k,v], ...], convert to assoc array
         $dict = [];
+        /** @var mixed $pair */
         foreach ($result as $pair) {
-            assert(is_array($pair));
+            assert(is_array($pair), 'Dict entry must be a [key, value] pair');
+            /** @var mixed $key */
             $key = $pair[0];
-            assert(is_string($key) || is_int($key));
+            assert(is_string($key) || is_int($key), 'Dict key must be a string or int');
             $dict[$key] = $pair[1];
         }
         return $dict;

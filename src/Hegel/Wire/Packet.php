@@ -6,7 +6,7 @@ namespace Hegel\Wire;
 
 final readonly class Packet
 {
-    public const int MAGIC = 0x4845474C;
+    public const int MAGIC = 0x4845_474C;
     public const int REPLY_BIT = 1 << 31;
     public const int TERMINATOR = 0x0A;
     public const int HEADER_SIZE = 20;

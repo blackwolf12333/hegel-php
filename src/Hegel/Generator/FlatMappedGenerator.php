@@ -24,14 +24,16 @@ final class FlatMappedGenerator implements Generator
     {
         $testCase->startSpan(SpanLabel::FlatMap->value);
         try {
+            /** @var mixed $derived */
             $derived = ($this->fn)($this->inner->draw($testCase));
-            assert($derived instanceof Generator);
+            assert($derived instanceof Generator, 'flatMap callback must return a Generator');
             return $derived->draw($testCase);
         } finally {
             $testCase->stopSpan();
         }
     }
 
+    #[\Override]
     public function schema(): array
     {
         return $this->inner->schema();

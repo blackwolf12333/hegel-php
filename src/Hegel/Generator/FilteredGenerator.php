@@ -28,6 +28,7 @@ final class FilteredGenerator implements Generator
         $testCase->startSpan(SpanLabel::Filter->value);
 
         for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
+            /** @var mixed $drawn */
             $drawn = $this->inner->draw($testCase);
             if (($this->predicate)($drawn)) {
                 $testCase->stopSpan();
@@ -39,6 +40,7 @@ final class FilteredGenerator implements Generator
         throw new AssumeRejectedException(sprintf('Filter rejected %d consecutive attempts', self::MAX_ATTEMPTS));
     }
 
+    #[\Override]
     public function schema(): array
     {
         return $this->inner->schema();

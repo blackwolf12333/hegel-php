@@ -9,7 +9,6 @@ use Hegel\Generator\DictGenerator;
 use Hegel\Generator\FilteredGenerator;
 use Hegel\Generator\FlatMappedGenerator;
 use Hegel\Generator\FloatGenerator;
-use Hegel\Generator\Generator;
 use Hegel\Generator\Generators as gen;
 use Hegel\Generator\ListGenerator;
 use Hegel\Generator\MappedGenerator;
@@ -144,8 +143,9 @@ final class GeneratorsTest extends TestCase
         $this->assertInstanceOf(ListGenerator::class, $gen);
         $schema = $gen->schema();
         $this->assertSame('list', $schema['type']);
+        /** @var mixed $elements */
         $elements = $schema['elements'];
-        assert(is_array($elements));
+        assert(is_array($elements), 'List elements schema must be an array');
         $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $elements);
     }
 
@@ -182,8 +182,9 @@ final class GeneratorsTest extends TestCase
         $gen = gen::tuples(gen::integers(0, 10), gen::booleans());
         $schema = $gen->schema();
         $this->assertSame('tuple', $schema['type']);
+        /** @var mixed $elements */
         $elements = $schema['elements'];
-        assert(is_array($elements));
+        assert(is_array($elements), 'Tuple elements schema must be an array');
         $this->assertCount(2, $elements);
         $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $elements[0]);
         $this->assertSame(['type' => 'boolean'], $elements[1]);
@@ -195,8 +196,9 @@ final class GeneratorsTest extends TestCase
         $gen = gen::oneOf(gen::integers(0, 10), gen::booleans());
         $schema = $gen->schema();
         $this->assertSame('one_of', $schema['type']);
+        /** @var mixed $generators */
         $generators = $schema['generators'];
-        assert(is_array($generators));
+        assert(is_array($generators), 'oneOf generators must be an array');
         $this->assertCount(2, $generators);
     }
 
@@ -213,29 +215,37 @@ final class GeneratorsTest extends TestCase
         $gen = gen::optional(gen::integers(0, 100));
         $schema = $gen->schema();
         $this->assertSame('one_of', $schema['type']);
+        /** @var mixed $generators */
         $generators = $schema['generators'];
-        assert(is_array($generators));
+        assert(is_array($generators), 'Optional generators must be an array');
         $this->assertCount(2, $generators);
 
         // First branch: null (tag 0)
+        /** @var mixed $branch0 */
         $branch0 = $generators[0];
-        assert(is_array($branch0));
+        assert(is_array($branch0), 'Branch 0 must be an array');
+        /** @var mixed $branch0Elements */
         $branch0Elements = $branch0['elements'];
-        assert(is_array($branch0Elements));
+        assert(is_array($branch0Elements), 'Branch 0 elements must be an array');
+        /** @var mixed $el0 */
         $el0 = $branch0Elements[0];
-        assert(is_array($el0));
+        assert(is_array($el0), 'Branch 0 element 0 must be an array');
         $this->assertSame(0, $el0['value']);
+        /** @var mixed $el1 */
         $el1 = $branch0Elements[1];
-        assert(is_array($el1));
+        assert(is_array($el1), 'Branch 0 element 1 must be an array');
         $this->assertSame('null', $el1['type']);
 
         // Second branch: inner generator (tag 1)
+        /** @var mixed $branch1 */
         $branch1 = $generators[1];
-        assert(is_array($branch1));
+        assert(is_array($branch1), 'Branch 1 must be an array');
+        /** @var mixed $branch1Elements */
         $branch1Elements = $branch1['elements'];
-        assert(is_array($branch1Elements));
+        assert(is_array($branch1Elements), 'Branch 1 elements must be an array');
+        /** @var mixed $el0b */
         $el0b = $branch1Elements[0];
-        assert(is_array($el0b));
+        assert(is_array($el0b), 'Branch 1 element 0 must be an array');
         $this->assertSame(1, $el0b['value']);
     }
 
@@ -292,21 +302,21 @@ final class GeneratorsTest extends TestCase
     #[Test]
     public function map_creates_mapped_generator(): void
     {
-        $gen = gen::integers(0, 10)->map(fn(int $n): int => $n * 2);
+        $gen = gen::integers(0, 10)->map(static fn(int $n): int => $n * 2);
         $this->assertInstanceOf(MappedGenerator::class, $gen);
     }
 
     #[Test]
     public function filter_creates_filtered_generator(): void
     {
-        $gen = gen::integers(0, 100)->filter(fn(int $n): bool => $n > 50);
+        $gen = gen::integers(0, 100)->filter(static fn(int $n): bool => $n > 50);
         $this->assertInstanceOf(FilteredGenerator::class, $gen);
     }
 
     #[Test]
     public function flat_map_creates_flat_mapped_generator(): void
     {
-        $gen = gen::integers(1, 10)->flatMap(fn(int $n): ListGenerator => gen::lists(gen::integers(0, $n)));
+        $gen = gen::integers(1, 10)->flatMap(static fn(int $n): ListGenerator => gen::lists(gen::integers(0, $n)));
         $this->assertInstanceOf(FlatMappedGenerator::class, $gen);
     }
 }

@@ -54,6 +54,7 @@ final class Stream
      */
     public function sendRequest(mixed $data): int
     {
+        /** @var mixed $payload */
         $payload = $data instanceof Command ? $data->toArray() : $data;
         return $this->sendRawRequest(CborCodec::encode($payload));
     }
@@ -87,7 +88,7 @@ final class Stream
      */
     public function receiveRawReply(int $messageId): string
     {
-        if (isset($this->responses[$messageId])) {
+        if (array_key_exists($messageId, $this->responses)) {
             $payload = $this->responses[$messageId];
             unset($this->responses[$messageId]);
             return $payload;
@@ -113,9 +114,10 @@ final class Stream
     public function receiveReply(int $messageId): mixed
     {
         $payload = $this->receiveRawReply($messageId);
+        /** @var mixed $decoded */
         $decoded = CborCodec::decode($payload);
 
-        if (is_array($decoded) && isset($decoded['error'])) {
+        if (is_array($decoded) && array_key_exists('error', $decoded)) {
             throw ConnectionException::serverError(
                 type: (string) ($decoded['type'] ?? 'Unknown'),
                 error: (string) $decoded['error'],

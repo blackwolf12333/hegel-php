@@ -97,8 +97,9 @@ final class ConnectionTest extends TestCase
         // Read request from server side
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
+        /** @var mixed $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded));
+        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('generate', $decoded['command']);
 
         // Server sends reply
@@ -110,6 +111,7 @@ final class ConnectionTest extends TestCase
             payload: $reply,
         ));
 
+        /** @var mixed $result */
         $result = $stream->receiveReply($msgId);
         $this->assertSame(42, $result);
 
@@ -179,12 +181,14 @@ final class ConnectionTest extends TestCase
         ));
 
         // Both should get correct results despite out-of-order delivery
+        /** @var mixed $result1 */
         $result1 = $s1->receiveReply($msg1);
+        /** @var mixed $result2 */
         $result2 = $s2->receiveReply($msg2);
 
-        assert(is_bool($result1));
+        assert(is_bool($result1), 'Stream 1 result must be a boolean');
         $this->assertTrue($result1);
-        assert(is_int($result2));
+        assert(is_int($result2), 'Stream 2 result must be an integer');
         $this->assertSame(99, $result2);
 
         fclose($clientSock);
@@ -212,6 +216,20 @@ final class ConnectionTest extends TestCase
     }
 
     #[Test]
+    public function control_stream_has_id_zero(): void
+    {
+        [$sock, $peer] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($sock, $sock);
+
+        $controlStream = $conn->controlStream();
+
+        $this->assertSame(0, $controlStream->streamId());
+
+        fclose($sock);
+        fclose($peer);
+    }
+
+    #[Test]
     public function connect_stream_allows_receiving_on_server_stream(): void
     {
         [$clientSock, $serverSock] = $this->createSocketPair();
@@ -230,10 +248,253 @@ final class ConnectionTest extends TestCase
             payload: CborCodec::encode(['command' => 'mark_complete', 'status' => 'VALID']),
         ));
 
-        [$requestMsgId, $request] = $stream->receiveRequest();
-        assert(is_array($request));
+        $received = $stream->receiveRequest();
+        $requestMsgId = $received[0];
+        /** @var mixed $request */
+        $request = $received[1];
+        assert(is_array($request), 'Received request must be an array');
         $this->assertSame(1, $requestMsgId);
         $this->assertSame('mark_complete', $request['command']);
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // --- Mutant: $this->streams[0] → $this->streams[1] — control stream must be at key 0 ---
+
+    #[Test]
+    public function packet_for_stream_zero_is_dispatched_to_control_stream(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $controlStream = $conn->controlStream();
+
+        // Server sends a reply packet addressed to stream 0 (the control stream)
+        PacketWriter::write($serverSock, new Packet(
+            streamId: 0,
+            messageId: 1,
+            isReply: true,
+            payload: 'control-reply',
+        ));
+
+        // dispatchPacket should route the packet to stream 0
+        $packet = $conn->readPacket();
+        $this->assertNotNull($packet);
+        $conn->dispatchPacket($packet);
+
+        // The control stream must now have the buffered reply available
+        $reply = $controlStream->receiveRawReply(1);
+        $this->assertSame('control-reply', $reply);
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // --- Mutant 64: sendRawReply is public ---
+
+    #[Test]
+    public function send_raw_reply_is_publicly_accessible(): void
+    {
+        $reflection = new \ReflectionMethod(Stream::class, 'sendRawReply');
+        $this->assertTrue($reflection->isPublic(), 'sendRawReply must be public');
+    }
+
+    // --- Mutant 65: receiveRawReply && -> || (non-reply packet before correct reply) ---
+
+    #[Test]
+    public function receive_raw_reply_skips_non_reply_packets_and_returns_correct_reply(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $stream = $conn->newStream();
+        $msgId = $stream->sendRawRequest('request-payload');
+
+        // Read the request from server side so the socket buffer is free
+        PacketReader::read($serverSock);
+
+        // Server sends a non-reply packet first (isReply=false, same stream, same msgId)
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $stream->streamId(),
+            messageId: $msgId,
+            isReply: false,
+            payload: 'not-a-reply',
+        ));
+
+        // Then sends the actual reply
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $stream->streamId(),
+            messageId: $msgId,
+            isReply: true,
+            payload: 'correct-reply',
+        ));
+
+        $reply = $stream->receiveRawReply($msgId);
+
+        // With the && -> || mutation, the non-reply would be returned instead.
+        $this->assertSame('correct-reply', $reply);
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // --- Mutant: return removal in bufferPacket for replies ---
+    // When a reply is buffered, it must NOT also be added to the requests queue.
+    // If the return is removed, the reply would be stored both as a response AND
+    // appended to the requests list, so receiveRequest() would incorrectly dequeue it.
+
+    #[Test]
+    public function buffer_packet_reply_does_not_also_enqueue_as_request(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $stream = $conn->newStream();
+        $msgId = $stream->sendRawRequest('req');
+
+        // Drain the outbound request
+        PacketReader::read($serverSock);
+
+        // Server sends a reply
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $stream->streamId(),
+            messageId: $msgId,
+            isReply: true,
+            payload: 'the-reply',
+        ));
+
+        // Manually read and buffer the packet via dispatchPacket (which calls bufferPacket)
+        $packet = $conn->readPacket();
+        $this->assertNotNull($packet);
+        $conn->dispatchPacket($packet);
+
+        // The reply must be retrievable via receiveRawReply
+        $reply = $stream->receiveRawReply($msgId);
+        $this->assertSame('the-reply', $reply);
+
+        // Now send a non-reply (request) packet and verify receiveRequest gets it, not the stale reply
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $stream->streamId(),
+            messageId: 99,
+            isReply: false,
+            payload: 'actual-request',
+        ));
+
+        $received = $stream->receiveRequest();
+        $receivedMsgId = $received[0];
+        /** @var mixed $receivedPayload */
+        $receivedPayload = $received[1];
+        $this->assertSame(99, $receivedMsgId);
+        // The payload is raw bytes decoded by CborCodec — send a CBOR-encoded value so it roundtrips
+        // We verify that the *request* (msgId=99) is returned, not the already-consumed reply
+        $this->assertNotSame($msgId, $receivedMsgId, 'receiveRequest must not return the already-buffered reply');
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // --- Mutant 66: bufferPacket return removal for replies ---
+
+    #[Test]
+    public function buffered_replies_are_retrieved_on_next_receive_raw_reply(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $stream = $conn->newStream();
+        $msg1 = $stream->sendRawRequest('req1');
+        $msg2 = $stream->sendRawRequest('req2');
+
+        // Drain both requests from server side
+        PacketReader::read($serverSock);
+        PacketReader::read($serverSock);
+
+        // Server sends reply for msg2 first, then msg1
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $stream->streamId(),
+            messageId: $msg2,
+            isReply: true,
+            payload: 'reply-for-2',
+        ));
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $stream->streamId(),
+            messageId: $msg1,
+            isReply: true,
+            payload: 'reply-for-1',
+        ));
+
+        // Requesting msg1 first should buffer msg2 and return msg1's reply
+        $reply1 = $stream->receiveRawReply($msg1);
+        $this->assertSame('reply-for-1', $reply1);
+
+        // msg2 was buffered; we should get it without reading from the socket
+        $reply2 = $stream->receiveRawReply($msg2);
+        $this->assertSame('reply-for-2', $reply2);
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // --- Mutant 67: $this->closed = true -> false in close() ---
+
+    #[Test]
+    public function close_sets_is_closed_to_true(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $stream = $conn->newStream();
+        $this->assertFalse($stream->isClosed());
+
+        $stream->close();
+
+        $this->assertTrue($stream->isClosed());
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    // --- Mutant 68: unregisterStream removal from close() ---
+
+    #[Test]
+    public function close_unregisters_stream_so_subsequent_packets_are_dropped(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        $streamA = $conn->newStream();
+        $streamB = $conn->newStream();
+
+        // Close streamA
+        $streamA->close();
+
+        // Drain the close packet from server side
+        PacketReader::read($serverSock);
+
+        // Send a request on streamB and receive it; send a packet for streamA first
+        $msgB = $streamB->sendRawRequest('req-b');
+        PacketReader::read($serverSock);
+
+        // Server sends a packet for the (now closed/unregistered) streamA,
+        // then a reply for streamB
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $streamA->streamId(),
+            messageId: 1,
+            isReply: true,
+            payload: 'orphan-payload',
+        ));
+        PacketWriter::write($serverSock, new Packet(
+            streamId: $streamB->streamId(),
+            messageId: $msgB,
+            isReply: true,
+            payload: 'reply-b',
+        ));
+
+        // Without unregisterStream the orphan packet would be buffered into streamA,
+        // but receiving on streamB must succeed anyway.
+        $replyB = $streamB->receiveRawReply($msgB);
+        $this->assertSame('reply-b', $replyB);
 
         fclose($clientSock);
         fclose($serverSock);

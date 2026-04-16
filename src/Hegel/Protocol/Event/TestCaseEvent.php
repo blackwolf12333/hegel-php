@@ -18,7 +18,7 @@ final readonly class TestCaseEvent
     {
         return new self(
             streamId: (int) $data['stream_id'],
-            isFinal: (bool) ($data['is_final'] ?? false),
+            isFinal: ($data['is_final'] ?? false) === true,
         );
     }
 }

@@ -68,8 +68,8 @@ final class Generators
      */
     private static function makeSampledFromTransform(array $indexed): \Closure
     {
-        return function (mixed $index) use ($indexed): mixed {
-            assert(is_int($index));
+        return static function (mixed $index) use ($indexed): mixed {
+            assert(is_int($index), 'sampledFrom index must be an integer');
             return $indexed[$index];
         };
     }
@@ -98,7 +98,7 @@ final class Generators
     {
         return new BasicGenerator([
             'type' => 'tuple',
-            'elements' => array_map(fn(Generator $g): array => $g->schema(), $elements),
+            'elements' => array_map(static fn(Generator $g): array => $g->schema(), $elements),
         ]);
     }
 
@@ -115,8 +115,8 @@ final class Generators
 
         return new BasicGenerator(
             schema: ['type' => 'one_of', 'generators' => $branches],
-            transform: function (mixed $result): mixed {
-                assert(is_array($result));
+            transform: static function (mixed $result): mixed {
+                assert(is_array($result), 'oneOf result must be an array');
                 return $result[1];
             },
             spanLabel: SpanLabel::OneOf,
@@ -145,8 +145,8 @@ final class Generators
                     ],
                 ],
             ],
-            transform: function (mixed $result): mixed {
-                assert(is_array($result));
+            transform: static function (mixed $result): mixed {
+                assert(is_array($result), 'optional result must be an array');
                 return $result[0] === 0 ? null : $result[1];
             },
             spanLabel: SpanLabel::Optional,

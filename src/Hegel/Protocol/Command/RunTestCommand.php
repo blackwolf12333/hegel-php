@@ -16,6 +16,7 @@ final readonly class RunTestCommand implements Command
         public array $suppressHealthCheck = [],
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         $data = [

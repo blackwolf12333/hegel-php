@@ -34,7 +34,6 @@ final class ServerProcess
         ];
 
         $currentEnv = getenv();
-        assert(is_array($currentEnv));
         $env = array_merge($currentEnv, ['PYTHONUNBUFFERED' => '1']);
 
         $pipes = [];
@@ -44,11 +43,13 @@ final class ServerProcess
         }
 
         $this->process = $process;
-        $this->stdin = $pipes[0];
-        $this->stdout = $pipes[1];
+        $this->stdin = $pipes[0] ?? null;
+        $this->stdout = $pipes[1] ?? null;
 
         // Close stderr pipe to avoid blocking
-        fclose($pipes[2]);
+        if (($pipes[2] ?? null) !== null) {
+            fclose($pipes[2]);
+        }
     }
 
     /** @return resource */

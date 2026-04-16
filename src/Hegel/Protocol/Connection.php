@@ -109,7 +109,7 @@ final class Connection
      */
     public function dispatchPacket(Packet $packet): void
     {
-        if (isset($this->streams[$packet->streamId])) {
+        if (array_key_exists($packet->streamId, $this->streams)) {
             $this->streams[$packet->streamId]->bufferPacket($packet);
         }
 
@@ -121,7 +121,7 @@ final class Connection
      */
     public function handleCloseStream(int $streamId): void
     {
-        if (isset($this->streams[$streamId])) {
+        if (array_key_exists($streamId, $this->streams)) {
             $this->streams[$streamId]->markClosed();
             unset($this->streams[$streamId]);
         }

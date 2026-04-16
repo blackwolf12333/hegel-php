@@ -10,6 +10,7 @@ final readonly class CollectionMoreCommand implements Command
         public int|string $collectionId,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -10,6 +10,7 @@ final readonly class StartSpanCommand implements Command
         public int $label,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         return [

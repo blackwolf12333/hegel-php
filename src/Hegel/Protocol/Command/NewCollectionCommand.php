@@ -11,6 +11,7 @@ final readonly class NewCollectionCommand implements Command
         public null|int $maxSize = null,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         $data = [

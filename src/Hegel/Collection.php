@@ -17,8 +17,9 @@ final class Collection
 
     public function more(): bool
     {
+        /** @var mixed $result */
         $result = $this->stream->requestCbor(new CollectionMoreCommand($this->collectionId));
-        assert(is_bool($result));
+        assert(is_bool($result), 'Collection more() must return a boolean');
         return $result;
     }
 

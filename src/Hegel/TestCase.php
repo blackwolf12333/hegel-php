@@ -61,6 +61,9 @@ final class TestCase
      *
      * @throws DataExhaustedException
      */
+    /**
+     * @param array<string, mixed> $schema
+     */
     public function generateFromSchema(array $schema): mixed
     {
         try {
@@ -90,8 +93,9 @@ final class TestCase
 
     public function newCollection(int $minSize, null|int $maxSize): Collection
     {
+        /** @var mixed $id */
         $id = $this->stream->requestCbor(new NewCollectionCommand($minSize, $maxSize));
-        assert(is_int($id) || is_string($id));
+        assert(is_int($id) || is_string($id), 'Collection ID must be an int or string');
 
         return new Collection($id, $this->stream);
     }

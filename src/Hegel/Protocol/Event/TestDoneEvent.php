@@ -21,19 +21,19 @@ final readonly class TestDoneEvent
      */
     public static function fromArray(array $data): self
     {
+        /** @var array<string, mixed> $results */
         $results = $data['results'] ?? [];
-        assert(is_array($results));
 
         return new self(
             interestingTestCases: (int) ($results['interesting_test_cases'] ?? 0),
-            passed: (bool) ($results['passed'] ?? true),
+            passed: ($results['passed'] ?? true) === true,
             testCases: (int) ($results['test_cases'] ?? 0),
             seed: (string) ($results['seed'] ?? ''),
-            error: isset($results['error']) ? (string) $results['error'] : null,
-            healthCheckFailure: isset($results['health_check_failure'])
+            error: array_key_exists('error', $results) ? (string) $results['error'] : null,
+            healthCheckFailure: array_key_exists('health_check_failure', $results)
                 ? (string) $results['health_check_failure']
                 : null,
-            flaky: isset($results['flaky']) ? (string) $results['flaky'] : null,
+            flaky: array_key_exists('flaky', $results) ? (string) $results['flaky'] : null,
         );
     }
 }

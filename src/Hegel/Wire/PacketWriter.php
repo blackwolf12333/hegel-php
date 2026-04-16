@@ -27,7 +27,7 @@ final class PacketWriter
             . pack('N', $payloadLen);
 
         // Compute CRC32 over header (checksum zeroed) + payload
-        $checksum = crc32($header . $packet->payload) & 0xFFFFFFFF;
+        $checksum = crc32($header . $packet->payload) & 0xFFFF_FFFF;
 
         // Patch checksum into header
         $header = substr($header, 0, 4) . pack('N', $checksum) . substr($header, 8);

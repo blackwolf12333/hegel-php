@@ -24,11 +24,11 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
-        assert(is_string($data));
+        assert(is_string($data), 'Failed to read stream contents');
         fclose($stream);
 
         // 20 byte header + 5 byte payload + 1 byte terminator = 26
@@ -36,25 +36,25 @@ final class PacketTest extends TestCase
 
         // Magic bytes
         $unpacked = unpack('N', substr($data, 0, 4));
-        assert($unpacked !== false);
+        assert($unpacked !== false, 'Failed to unpack magic bytes');
         $magic = $unpacked[1];
-        $this->assertSame(0x4845474C, $magic);
+        $this->assertSame(0x4845_474C, $magic);
 
         // Stream ID
         $unpacked = unpack('N', substr($data, 8, 4));
-        assert($unpacked !== false);
+        assert($unpacked !== false, 'Failed to unpack stream ID');
         $streamId = $unpacked[1];
         $this->assertSame(3, $streamId);
 
         // Message ID (no reply bit)
         $unpacked = unpack('N', substr($data, 12, 4));
-        assert($unpacked !== false);
+        assert($unpacked !== false, 'Failed to unpack message ID');
         $messageId = $unpacked[1];
         $this->assertSame(1, $messageId);
 
         // Payload length
         $unpacked = unpack('N', substr($data, 16, 4));
-        assert($unpacked !== false);
+        assert($unpacked !== false, 'Failed to unpack payload length');
         $payloadLen = $unpacked[1];
         $this->assertSame(5, $payloadLen);
     }
@@ -70,23 +70,23 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
-        assert(is_string($data));
+        assert(is_string($data), 'Failed to read stream contents');
         fclose($stream);
 
         // Extract checksum from header
         $unpacked = unpack('N', substr($data, 4, 4));
-        assert($unpacked !== false);
+        assert($unpacked !== false, 'Failed to unpack checksum');
         $checksum = $unpacked[1];
 
         // Compute expected: header with checksum zeroed + payload
         $headerWithZeroed = substr($data, 0, 4) . "\x00\x00\x00\x00" . substr($data, 8, 12);
         $expected = crc32($headerWithZeroed . 'hello');
         // crc32() returns signed on 32-bit, but we compare as unsigned
-        $expected &= 0xFFFFFFFF;
+        $expected &= 0xFFFF_FFFF;
 
         $this->assertSame($expected, $checksum);
     }
@@ -102,11 +102,11 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
-        assert(is_string($data));
+        assert(is_string($data), 'Failed to read stream contents');
         fclose($stream);
 
         $this->assertSame(0x0A, ord($data[strlen($data) - 1]));
@@ -123,7 +123,7 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -147,7 +147,7 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -170,7 +170,7 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -186,9 +186,9 @@ final class PacketTest extends TestCase
     public function read_rejects_bad_magic(): void
     {
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         // Write a header with wrong magic
-        fwrite($stream, pack('N', 0xDEADBEEF)); // bad magic
+        fwrite($stream, pack('N', 0xDEAD_BEEF)); // bad magic
         fwrite($stream, pack('N', 0)); // checksum
         fwrite($stream, pack('N', 0)); // stream id
         fwrite($stream, pack('N', 1)); // message id
@@ -213,17 +213,17 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
-        assert(is_string($data));
+        assert(is_string($data), 'Failed to read stream contents');
 
         // Corrupt checksum byte
         $data[4] = chr(ord($data[4]) ^ 0xFF);
 
         $corrupted = fopen('php://memory', 'r+');
-        assert($corrupted !== false);
+        assert($corrupted !== false, 'Failed to open memory stream');
         fwrite($corrupted, $data);
         rewind($corrupted);
 
@@ -244,17 +244,17 @@ final class PacketTest extends TestCase
         );
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $packet);
         rewind($stream);
         $data = stream_get_contents($stream);
-        assert(is_string($data));
+        assert(is_string($data), 'Failed to read stream contents');
 
         // Replace terminator (last byte)
         $data[strlen($data) - 1] = "\xFF";
 
         $corrupted = fopen('php://memory', 'r+');
-        assert($corrupted !== false);
+        assert($corrupted !== false, 'Failed to open memory stream');
         fwrite($corrupted, $data);
         rewind($corrupted);
 
@@ -294,7 +294,7 @@ final class PacketTest extends TestCase
         $original = Packet::closeStream(streamId: 7);
 
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         PacketWriter::write($stream, $original);
         rewind($stream);
         $decoded = PacketReader::read($stream);
@@ -309,11 +309,123 @@ final class PacketTest extends TestCase
     public function read_returns_null_on_eof(): void
     {
         $stream = fopen('php://memory', 'r+');
-        assert($stream !== false);
+        assert($stream !== false, 'Failed to open memory stream');
         // Empty stream
         $result = PacketReader::read($stream);
         fclose($stream);
 
         $this->assertNull($result);
+    }
+
+    // --- Mutant 89: isCloseStream() && -> || ---
+
+    #[Test]
+    public function is_close_stream_requires_matching_message_id(): void
+    {
+        // messageId does NOT match CLOSE_STREAM_MESSAGE_ID, payload matches
+        $packet = new Packet(
+            streamId: 3,
+            messageId: 1,
+            isReply: false,
+            payload: Packet::CLOSE_STREAM_PAYLOAD,
+        );
+        $this->assertFalse($packet->isCloseStream());
+    }
+
+    #[Test]
+    public function is_close_stream_requires_matching_payload(): void
+    {
+        // messageId matches CLOSE_STREAM_MESSAGE_ID, payload does NOT match
+        $packet = new Packet(
+            streamId: 3,
+            messageId: Packet::CLOSE_STREAM_MESSAGE_ID,
+            isReply: false,
+            payload: 'not-close',
+        );
+        $this->assertFalse($packet->isCloseStream());
+    }
+
+    // --- Mutants 90-95: header field substr offsets ---
+
+    #[Test]
+    public function roundtrip_all_distinct_nonzero_header_fields(): void
+    {
+        // Use distinct non-zero values in every field so that a wrong offset
+        // in unpack() would read the wrong value and fail an assertion.
+        $original = new Packet(
+            streamId: 0x0000_1234,
+            messageId: 0x0000_0057,
+            isReply: true,
+            payload: 'distinct-payload',
+        );
+
+        $stream = fopen('php://memory', 'r+');
+        assert($stream !== false, 'Failed to open memory stream');
+        PacketWriter::write($stream, $original);
+        rewind($stream);
+        $decoded = PacketReader::read($stream);
+        fclose($stream);
+
+        $this->assertNotNull($decoded);
+        $this->assertSame(0x0000_1234, $decoded->streamId);
+        $this->assertSame(0x0000_0057, $decoded->messageId);
+        $this->assertTrue($decoded->isReply);
+        $this->assertSame('distinct-payload', $decoded->payload);
+    }
+
+    #[Test]
+    public function header_checksum_field_is_at_offset_4(): void
+    {
+        // Write a packet, read the raw bytes, and verify the checksum is
+        // exactly at bytes 4-7 (not 0-3 or 8-11).
+        $packet = new Packet(
+            streamId: 0xAB_CD_EF_01,
+            messageId: 0x0000_0023,
+            isReply: false,
+            payload: 'crc-position-check',
+        );
+
+        $stream = fopen('php://memory', 'r+');
+        assert($stream !== false, 'Failed to open memory stream');
+        PacketWriter::write($stream, $packet);
+        rewind($stream);
+        $data = stream_get_contents($stream);
+        assert(is_string($data), 'Failed to read stream contents');
+        fclose($stream);
+
+        // Magic must be at offset 0
+        /** @var mixed $unpackedMagic */
+        $unpackedMagic = unpack('N', substr($data, 0, 4));
+        assert(is_array($unpackedMagic), 'Failed to unpack magic');
+        $this->assertSame(Packet::MAGIC, $unpackedMagic[1]);
+
+        // Checksum is at offset 4 — if we zero it and recompute, it should match
+        /** @var mixed $unpackedCrc */
+        $unpackedCrc = unpack('N', substr($data, 4, 4));
+        assert(is_array($unpackedCrc), 'Failed to unpack CRC');
+        /** @var mixed $storedCrc */
+        $storedCrc = $unpackedCrc[1];
+
+        $headerWithZeroed = substr($data, 0, 4) . "\x00\x00\x00\x00" . substr($data, 8, 12);
+        $recomputed = crc32($headerWithZeroed . 'crc-position-check') & 0xFFFF_FFFF;
+        $this->assertSame($recomputed, $storedCrc);
+
+        // StreamId is at offset 8
+        /** @var mixed $unpackedStream */
+        $unpackedStream = unpack('N', substr($data, 8, 4));
+        assert(is_array($unpackedStream), 'Failed to unpack stream ID');
+        $this->assertSame(0xAB_CD_EF_01, $unpackedStream[1]);
+
+        // MessageId (raw, with reply bit) is at offset 12
+        /** @var mixed $unpackedMsg */
+        $unpackedMsg = unpack('N', substr($data, 12, 4));
+        assert(is_array($unpackedMsg), 'Failed to unpack message ID');
+        $this->assertSame(0x0000_0023, $unpackedMsg[1]);
+
+        // PayloadLen is at offset 16
+        /** @var mixed $unpackedLen */
+        $unpackedLen = unpack('N', substr($data, 16, 4));
+        assert(is_array($unpackedLen), 'Failed to unpack payload length');
+        $this->assertSame(strlen('crc-position-check'), $unpackedLen[1]);
     }
 }

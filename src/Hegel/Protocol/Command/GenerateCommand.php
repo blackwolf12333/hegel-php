@@ -13,6 +13,7 @@ final readonly class GenerateCommand implements Command
         public array $schema,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -51,18 +51,3 @@ final class HegelTraitTest extends TestCase
         $this->assertCount(0, $attributes);
     }
 }
-
-/**
- * @internal Stub for reflection tests only.
- */
-final class PropertyAnnotatedStub
-{
-    #[Property(testCases: 200)]
-    public function myTest(): void
-    {
-    }
-
-    public function normalTest(): void
-    {
-    }
-}

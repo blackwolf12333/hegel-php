@@ -65,7 +65,7 @@ final class CborCodec
         if (strlen($hex) % 2 !== 0) {
             $hex = '0' . $hex;
         }
-        return hex2bin($hex);
+        return (string) hex2bin($hex);
     }
 
     public static function decode(string $data): mixed
@@ -103,7 +103,7 @@ final class CborCodec
         if ($object instanceof ListObject || $object instanceof IndefiniteLengthListObject) {
             $result = [];
             foreach ($object as $item) {
-                assert($item instanceof CBORObject);
+                assert($item instanceof CBORObject, 'List item must be a CBORObject');
                 $result[] = self::normalize($item);
             }
             return $result;
@@ -112,9 +112,10 @@ final class CborCodec
         if ($object instanceof MapObject || $object instanceof IndefiniteLengthMapObject) {
             $result = [];
             foreach ($object as $mapItem) {
-                assert($mapItem instanceof \CBOR\MapItem);
+                assert($mapItem instanceof \CBOR\MapItem, 'Map entry must be a MapItem');
+                /** @var mixed $key */
                 $key = self::normalize($mapItem->getKey());
-                assert(is_string($key) || is_int($key));
+                assert(is_string($key) || is_int($key), 'Map key must be a string or int');
                 $result[$key] = self::normalize($mapItem->getValue());
             }
             return $result;

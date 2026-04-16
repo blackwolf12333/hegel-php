@@ -52,8 +52,14 @@ final class Runner
         $finalErrors = [];
 
         while (true) {
-            [$msgId, $event] = $testStream->receiveRequest();
-            assert(is_array($event));
+            $received = $testStream->receiveRequest();
+            $msgId = $received[0];
+            /** @var mixed $rawEvent */
+            $rawEvent = $received[1];
+            assert(is_array($rawEvent), 'Event payload must be an array');
+            /** @var array<string, mixed> $event */
+            $event = $rawEvent;
+            /** @var mixed $eventName */
             $eventName = $event['event'] ?? null;
 
             if ($eventName === 'test_case') {
@@ -119,10 +125,15 @@ final class Runner
         array &$finalErrors,
     ): void {
         for ($i = 0; $i < $nInteresting; $i++) {
-            [$replayMsgId, $replayEvent] = $testStream->receiveRequest();
-            assert(is_array($replayEvent));
+            $replayReceived = $testStream->receiveRequest();
+            $replayMsgId = $replayReceived[0];
+            /** @var mixed $rawReplayEvent */
+            $rawReplayEvent = $replayReceived[1];
+            assert(is_array($rawReplayEvent), 'Replay event payload must be an array');
+            /** @var array<string, mixed> $replayEvent */
+            $replayEvent = $rawReplayEvent;
 
-            if (!isset($replayEvent['event']) || $replayEvent['event'] !== 'test_case') {
+            if (($replayEvent['event'] ?? null) !== 'test_case') {
                 continue;
             }
 

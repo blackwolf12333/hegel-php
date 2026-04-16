@@ -7,7 +7,6 @@ namespace Hegel\Tests\Unit;
 use Hegel\Codec\CborCodec;
 use Hegel\Collection;
 use Hegel\Exception\AssumeRejectedException;
-use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
 use Hegel\Protocol\Connection;
 use Hegel\Protocol\Stream;
@@ -38,7 +37,7 @@ final class TestCaseTest extends TestCase
      */
     private function replyWithResult(mixed $serverSock, int $streamId, int $messageId, mixed $result): void
     {
-        assert(is_resource($serverSock));
+        assert(is_resource($serverSock), 'Expected a resource for server socket');
         PacketWriter::write($serverSock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -52,7 +51,7 @@ final class TestCaseTest extends TestCase
      */
     private function replyWithError(mixed $serverSock, int $streamId, int $messageId, string $error, string $type): void
     {
-        assert(is_resource($serverSock));
+        assert(is_resource($serverSock), 'Expected a resource for server socket');
         PacketWriter::write($serverSock, new Packet(
             streamId: $streamId,
             messageId: $messageId,
@@ -77,7 +76,7 @@ final class TestCaseTest extends TestCase
         [$stream, $serverSock] = $this->createTestStream();
 
         $notes = [];
-        $noteFn = function (string $msg) use (&$notes): void {
+        $noteFn = static function (string $msg) use (&$notes): void {
             $notes[] = $msg;
         };
 
@@ -108,14 +107,16 @@ final class TestCaseTest extends TestCase
         // Verify what was sent
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
+        /** @var mixed $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded));
+        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('generate', $decoded['command']);
         $this->assertSame($schema, $decoded['schema']);
 
         // Send reply
         $this->replyWithResult($serverSock, $stream->streamId(), $msgId, 42);
 
+        /** @var mixed $result */
         $result = $stream->receiveReply($msgId);
         $this->assertSame(42, $result);
 
@@ -131,14 +132,16 @@ final class TestCaseTest extends TestCase
         // Pre-write the reply for the generate command (msg id will be 1)
         $this->replyWithResult($serverSock, $stream->streamId(), 1, 42);
 
+        /** @var mixed $result */
         $result = $tc->generateFromSchema(['type' => 'integer', 'min_value' => 0, 'max_value' => 100]);
         $this->assertSame(42, $result);
 
         // Verify what was sent
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
+        /** @var mixed $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded));
+        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('generate', $decoded['command']);
 
         fclose($serverSock);
@@ -172,8 +175,9 @@ final class TestCaseTest extends TestCase
 
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
+        /** @var mixed $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded));
+        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('target', $decoded['command']);
         $this->assertSame(0.5, $decoded['value']);
         $this->assertSame('score', $decoded['label']);
@@ -197,15 +201,17 @@ final class TestCaseTest extends TestCase
         // Read both packets sent
         $p1 = PacketReader::read($serverSock);
         $this->assertNotNull($p1);
+        /** @var mixed $d1 */
         $d1 = CborCodec::decode($p1->payload);
-        assert(is_array($d1));
+        assert(is_array($d1), 'Decoded CBOR payload must be an array');
         $this->assertSame('start_span', $d1['command']);
         $this->assertSame(1, $d1['label']);
 
         $p2 = PacketReader::read($serverSock);
         $this->assertNotNull($p2);
+        /** @var mixed $d2 */
         $d2 = CborCodec::decode($p2->payload);
-        assert(is_array($d2));
+        assert(is_array($d2), 'Decoded CBOR payload must be an array');
         $this->assertSame('stop_span', $d2['command']);
         $this->assertFalse($d2['discard']);
 
@@ -226,8 +232,9 @@ final class TestCaseTest extends TestCase
 
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
+        /** @var mixed $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded));
+        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('new_collection', $decoded['command']);
         $this->assertSame(0, $decoded['min_size']);
         $this->assertSame(10, $decoded['max_size']);
@@ -249,6 +256,25 @@ final class TestCaseTest extends TestCase
         $coll = $tc->newCollection(0, 5);
         $this->assertTrue($coll->more());
         $this->assertFalse($coll->more());
+
+        fclose($serverSock);
+    }
+
+    // Mutants 87-88: DataExhaustedException code must be 0
+    #[Test]
+    public function generate_from_schema_stop_test_throws_data_exhausted_with_code_zero(): void
+    {
+        [$stream, $serverSock] = $this->createTestStream();
+        $tc = new HegelTestCase($stream);
+
+        $this->replyWithError($serverSock, $stream->streamId(), 1, 'Data exhausted', 'StopTest');
+
+        try {
+            $tc->generateFromSchema(['type' => 'integer']);
+            $this->fail('Expected DataExhaustedException to be thrown');
+        } catch (DataExhaustedException $e) {
+            $this->assertSame(0, $e->getCode(), 'DataExhaustedException must have code 0');
+        }
 
         fclose($serverSock);
     }

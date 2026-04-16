@@ -59,7 +59,7 @@ final class PacketReader
 
         // Verify checksum: header with checksum field zeroed + payload
         $headerZeroed = substr($header, 0, 4) . "\x00\x00\x00\x00" . substr($header, 8);
-        $computed = crc32($headerZeroed . $payload) & 0xFFFFFFFF;
+        $computed = crc32($headerZeroed . $payload) & 0xFFFF_FFFF;
         if ($computed !== $checksum) {
             throw new ConnectionException(sprintf(
                 'Checksum mismatch: expected 0x%08X, got 0x%08X',

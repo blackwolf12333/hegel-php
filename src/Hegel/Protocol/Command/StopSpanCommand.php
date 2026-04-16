@@ -10,6 +10,7 @@ final readonly class StopSpanCommand implements Command
         public bool $discard,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         return [

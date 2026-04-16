@@ -42,7 +42,7 @@ final class EndToEndTest extends TestCase
         $runner = new Runner($conn);
 
         $result = $runner->run(
-            testFn: function (TC $tc): void {
+            testFn: static function (TC $tc): void {
                 $n = (int) $tc->draw(gen::integers(0, 100));
                 if ($n >= 50) {
                     throw new \RuntimeException("Value {$n} is >= 50");
@@ -78,24 +78,27 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function text_generation_produces_strings(TC $tc): void
     {
-        $text = (string) $tc->draw(gen::text(0, 100));
-        $this->assertIsString($text);
+        /** @var mixed $drawn */
+        $drawn = $tc->draw(gen::text(0, 100));
+        $this->assertIsString($drawn);
     }
 
     #[Test, Property]
     public function list_generation_with_bounds(TC $tc): void
     {
-        $list = (array) $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
-        $this->assertIsArray($list);
-        $this->assertGreaterThanOrEqual(1, count($list));
-        $this->assertLessThanOrEqual(5, count($list));
+        /** @var mixed $drawn */
+        $drawn = $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
+        $this->assertIsArray($drawn);
+        $this->assertGreaterThanOrEqual(1, count($drawn));
+        $this->assertLessThanOrEqual(5, count($drawn));
     }
 
     #[Test, Property]
     public function boolean_generation(TC $tc): void
     {
-        $b = (bool) $tc->draw(gen::booleans());
-        $this->assertIsBool($b);
+        /** @var mixed $drawn */
+        $drawn = $tc->draw(gen::booleans());
+        $this->assertIsBool($drawn);
     }
 
     #[Test, Property]
@@ -115,7 +118,11 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function sort_is_idempotent(TC $tc): void
     {
-        $list = (array) $tc->draw(gen::lists(gen::integers(0, 100)));
+        /** @var mixed $drawn */
+        $drawn = $tc->draw(gen::lists(gen::integers(0, 100)));
+        assert(is_array($drawn), 'List draw must return an array');
+        /** @var list<int> $list */
+        $list = $drawn;
         sort($list);
         $sorted = $list;
         sort($sorted);

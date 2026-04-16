@@ -30,6 +30,7 @@ final class MappedGenerator implements Generator
         }
     }
 
+    #[\Override]
     public function schema(): array
     {
         return $this->inner->schema();

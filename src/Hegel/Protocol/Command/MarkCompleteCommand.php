@@ -11,6 +11,7 @@ final readonly class MarkCompleteCommand implements Command
         public null|string $origin = null,
     ) {}
 
+    #[\Override]
     public function toArray(): array
     {
         return [

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Hegel\Tests\Integration;
 
 use Hegel\Generator\Generators as gen;
@@ -9,7 +11,7 @@ use Hegel\TestCase as TC;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-function mySort(array $list): array
+function my_sort(array $list): array
 {
     $result = $list;
     sort($result);
@@ -28,8 +30,12 @@ final class MySortTest extends TestCase
     #[Test, Property]
     public function matches_builtin(TC $tc): void
     {
-        $list1 = (array) $tc->draw(gen::lists(gen::integers()));
-        $list2 = mySort($list1);
+        /** @var mixed $drawn */
+        $drawn = $tc->draw(gen::lists(gen::integers()));
+        assert(is_array($drawn), 'List draw must return an array');
+        /** @var list<int> $list1 */
+        $list1 = $drawn;
+        $list2 = my_sort($list1);
         sort($list1);
         $this->assertEquals($list1, $list2);
     }
