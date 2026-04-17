@@ -1,11 +1,16 @@
 # Welcome to Mago!
 # For full documentation, see https://mago.carthage.software/tools/overview
+version = "1"
 php-version = "8.4.0"
 
 [source]
+workspace = "."
 paths = ["src/Hegel/", "tests/"]
 includes = ["vendor"]
 excludes = []
+
+[source.glob]
+literal-separator = true
 
 [formatter]
 print-width = 120
@@ -18,17 +23,23 @@ integrations = ["phpunit"]
 [linter.rules]
 ambiguous-function-call = { enabled = false }
 literal-named-argument = { enabled = false }
-interface-name = { enabled = false }
-too-many-methods = { threshold = 35 }
-excessive-parameter-list = { threshold = 7 }
-cyclomatic-complexity = { threshold = 34 }
-halstead = { difficulty-threshold = 20, effort-threshold = 10000 }
-kan-defect = { threshold = 2.5 }
+halstead = { effort-threshold = 7000 }
+cyclomatic-complexity = { enabled = false }
+kan-defect = { enabled = false }
+too-many-methods = { enabled = false }
+excessive-parameter-list = { enabled = false }
 
 [analyzer]
+plugins = []
 find-unused-definitions = true
-find-unused-expressions = false
-analyze-dead-code = false
-check-throws = false
-allow-possibly-undefined-array-keys = true
-perform-heuristic-checks = true
+find-unused-expressions = true
+analyze-dead-code = true
+memoize-properties = true
+allow-possibly-undefined-array-keys = false
+check-throws = true
+check-missing-override = true
+find-unused-parameters = true
+strict-list-index-checks = true
+no-boolean-literal-comparison = true
+check-missing-type-hints = true
+register-super-globals = true
