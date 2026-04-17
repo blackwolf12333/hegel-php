@@ -62,7 +62,7 @@ final class Stream
     /**
      * Send a raw reply for a given message ID.
      */
-    public function sendRawReply(int $messageId, string $payload): void
+    private function sendRawReply(int $messageId, string $payload): void
     {
         $packet = new Packet(
             streamId: $this->streamId,

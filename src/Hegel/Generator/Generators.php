@@ -61,7 +61,7 @@ final class Generators
         if ($values === []) {
             throw new \InvalidArgumentException('sampledFrom requires at least one value');
         }
-        $transform = self::makeSampledFromTransform(array_values($values));
+        $transform = self::makeSampledFromTransform($values);
         return new BasicGenerator(
             schema: ['type' => 'integer', 'min_value' => 0, 'max_value' => count($values) - 1],
             transform: $transform,

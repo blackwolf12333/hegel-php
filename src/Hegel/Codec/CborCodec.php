@@ -36,17 +36,16 @@ final class CborCodec
     private static function prepareLargeInts(mixed $value): mixed
     {
         if (is_int($value)) {
-            if ($value >= 0 && $value > self::CBOR_UINT32_MAX) {
+            if ($value > self::CBOR_UINT32_MAX) {
                 return UnsignedBigIntegerTag::create(
                     ByteStringObject::create(self::intToBytes($value)),
                 );
             }
-            if ($value < 0 && (-1 - $value) > self::CBOR_UINT32_MAX) {
+            if ((-1 - $value) > self::CBOR_UINT32_MAX) {
                 return NegativeBigIntegerTag::create(
                     ByteStringObject::create(self::intToBytes(-1 - $value)),
                 );
             }
-            return $value;
         }
 
         if (is_array($value)) {

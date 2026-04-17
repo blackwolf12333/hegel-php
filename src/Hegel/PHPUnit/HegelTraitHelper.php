@@ -38,7 +38,7 @@ final class HegelTraitHelper
         $conn = $connection ?? Session::global()->connection();
         $runner = new Runner($conn);
 
-        $healthChecks = array_values($property->suppressHealthChecks);
+        $healthChecks = $property->suppressHealthChecks;
 
         $result = $runner->run(
             testFn: static function (TC $tc) use ($testCase, $methodName, $testArguments): void {
