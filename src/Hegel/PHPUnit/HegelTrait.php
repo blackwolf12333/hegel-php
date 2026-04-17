@@ -28,6 +28,10 @@ trait HegelTrait
 {
     /**
      * @param array<mixed> $testArguments
+     * @throws \LogicException
+     * @throws \Hegel\Exception\FlakyTestException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
      */
     // @mago-expect analysis:invalid-parent-type
     protected function invokeTestMethod(string $methodName, array $testArguments): mixed

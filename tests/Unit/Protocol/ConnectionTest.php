@@ -26,6 +26,10 @@ final class ConnectionTest extends TestCase
         return $pair;
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function handshake_sends_ascii_and_receives_version(): void
     {
@@ -62,6 +66,9 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function new_stream_assigns_odd_ids(): void
     {
@@ -84,6 +91,11 @@ final class ConnectionTest extends TestCase
         fclose($peer);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function stream_request_reply_roundtrip(): void
     {
@@ -97,9 +109,8 @@ final class ConnectionTest extends TestCase
         // Read request from server side
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
-        /** @var mixed $decoded */
+        /** @var array{command: string} $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('generate', $decoded['command']);
 
         // Server sends reply
@@ -119,6 +130,10 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function stream_handles_error_reply(): void
     {
@@ -148,6 +163,11 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function packets_dispatched_to_correct_stream(): void
     {
@@ -195,6 +215,10 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function close_stream_sends_close_packet(): void
     {
@@ -215,6 +239,9 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function control_stream_has_id_zero(): void
     {
@@ -229,6 +256,11 @@ final class ConnectionTest extends TestCase
         fclose($peer);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function connect_stream_allows_receiving_on_server_stream(): void
     {
@@ -250,9 +282,8 @@ final class ConnectionTest extends TestCase
 
         $received = $stream->receiveRequest();
         $requestMsgId = $received[0];
-        /** @var mixed $request */
+        /** @var array{command: string} $request */
         $request = $received[1];
-        assert(is_array($request), 'Received request must be an array');
         $this->assertSame(1, $requestMsgId);
         $this->assertSame('mark_complete', $request['command']);
 
@@ -262,6 +293,10 @@ final class ConnectionTest extends TestCase
 
     // --- Mutant: $this->streams[0] → $this->streams[1] — control stream must be at key 0 ---
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     */
     #[Test]
     public function packet_for_stream_zero_is_dispatched_to_control_stream(): void
     {
@@ -293,6 +328,10 @@ final class ConnectionTest extends TestCase
 
     // --- Mutant 64: sendRawReply is public ---
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \ReflectionException
+     */
     #[Test]
     public function send_raw_reply_is_publicly_accessible(): void
     {
@@ -302,6 +341,10 @@ final class ConnectionTest extends TestCase
 
     // --- Mutant 65: receiveRawReply && -> || (non-reply packet before correct reply) ---
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function receive_raw_reply_skips_non_reply_packets_and_returns_correct_reply(): void
     {
@@ -344,6 +387,11 @@ final class ConnectionTest extends TestCase
     // If the return is removed, the reply would be stored both as a response AND
     // appended to the requests list, so receiveRequest() would incorrectly dequeue it.
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function buffer_packet_reply_does_not_also_enqueue_as_request(): void
     {
@@ -396,6 +444,10 @@ final class ConnectionTest extends TestCase
 
     // --- Mutant 66: bufferPacket return removal for replies ---
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function buffered_replies_are_retrieved_on_next_receive_raw_reply(): void
     {
@@ -438,6 +490,9 @@ final class ConnectionTest extends TestCase
 
     // --- Mutant 67: $this->closed = true -> false in close() ---
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function close_sets_is_closed_to_true(): void
     {
@@ -457,6 +512,10 @@ final class ConnectionTest extends TestCase
 
     // --- Mutant 68: unregisterStream removal from close() ---
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function close_unregisters_stream_so_subsequent_packets_are_dropped(): void
     {

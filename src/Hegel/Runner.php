@@ -28,6 +28,8 @@ final class Runner
      * @param int|null $seed Random seed
      * @param list<string> $suppressHealthCheck Health checks to suppress
      * @return RunResult
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
      */
     public function run(
         \Closure $testFn,
@@ -94,6 +96,7 @@ final class Runner
 
     /**
      * @param list<\Throwable> $finalErrors
+     * @throws \InvalidArgumentException
      */
     private function handleTestCase(
         TestCaseEvent $event,
@@ -116,6 +119,8 @@ final class Runner
 
     /**
      * @param list<\Throwable> $finalErrors
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
      */
     private function handleReplayCases(
         int $nInteresting,
@@ -151,6 +156,7 @@ final class Runner
      * Run a single test case on its dedicated stream.
      *
      * @return \Throwable|null The error if the test case failed.
+     * @throws \InvalidArgumentException
      */
     private function runTestCase(
         int $caseStreamId,

@@ -32,6 +32,11 @@ final class DomainGenerator implements Generator
         ];
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {

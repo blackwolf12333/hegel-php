@@ -54,6 +54,9 @@ final class DictGenerator implements Generator
 
     /**
      * @return array<string|int, mixed>
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
      */
     #[\Override]
     public function draw(TestCase $testCase): mixed
@@ -65,7 +68,7 @@ final class DictGenerator implements Generator
         $dict = [];
         /** @var mixed $pair */
         foreach ($result as $pair) {
-            assert(is_array($pair), 'Dict entry must be a [key, value] pair');
+            assert(is_array($pair) && array_key_exists(0, $pair) && array_key_exists(1, $pair), 'Dict entry must be a [key, value] pair');
             /** @var mixed $key */
             $key = $pair[0];
             assert(is_string($key) || is_int($key), 'Dict key must be a string or int');

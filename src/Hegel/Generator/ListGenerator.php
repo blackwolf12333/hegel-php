@@ -19,6 +19,9 @@ final class ListGenerator implements Generator
         private null|int $maxSize = null,
     ) {}
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function minSize(int $value): self
     {
         if ($this->maxSize !== null && $value > $this->maxSize) {
@@ -29,6 +32,9 @@ final class ListGenerator implements Generator
         return $new;
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public function maxSize(int $value): self
     {
         if ($value < $this->minSize) {
@@ -56,6 +62,11 @@ final class ListGenerator implements Generator
         return $schema;
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {

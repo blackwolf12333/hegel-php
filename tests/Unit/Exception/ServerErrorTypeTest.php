@@ -11,30 +11,46 @@ use PHPUnit\Framework\TestCase;
 final class ServerErrorTypeTest extends TestCase
 {
     // Mutant: isExpectedTermination() returns false instead of true for StopTest
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function stop_test_is_expected_termination(): void
     {
         $this->assertTrue(ServerErrorType::StopTest->isExpectedTermination());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function overflow_is_expected_termination(): void
     {
         $this->assertTrue(ServerErrorType::Overflow->isExpectedTermination());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function flaky_strategy_definition_is_expected_termination(): void
     {
         $this->assertTrue(ServerErrorType::FlakyStrategyDefinition->isExpectedTermination());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function flaky_replay_is_expected_termination(): void
     {
         $this->assertTrue(ServerErrorType::FlakyReplay->isExpectedTermination());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \ValueError
+     */
     #[Test]
     public function from_server_type_returns_correct_case(): void
     {
@@ -42,6 +58,9 @@ final class ServerErrorTypeTest extends TestCase
         $this->assertSame(ServerErrorType::Overflow, ServerErrorType::fromServerType('Overflow'));
     }
 
+    /**
+     * @throws \ValueError
+     */
     #[Test]
     public function from_server_type_throws_for_unknown_type(): void
     {

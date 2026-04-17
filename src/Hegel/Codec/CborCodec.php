@@ -22,7 +22,7 @@ use CBOR\UnsignedIntegerObject;
 
 final class CborCodec
 {
-    private const CBOR_UINT32_MAX = 0xFFFF_FFFE;
+    private const int CBOR_UINT32_MAX = 0xFFFF_FFFE;
 
     public static function encode(mixed $value): string
     {
@@ -68,6 +68,9 @@ final class CborCodec
         return (string) hex2bin($hex);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public static function decode(string $data): mixed
     {
         $decoder = Decoder::create();

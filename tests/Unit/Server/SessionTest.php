@@ -16,6 +16,9 @@ final class SessionTest extends TestCase
         Session::reset();
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function global_returns_same_instance_on_repeated_calls(): void
     {
@@ -25,6 +28,9 @@ final class SessionTest extends TestCase
         $this->assertSame($first, $second);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function global_returns_new_instance_after_reset(): void
     {
@@ -35,6 +41,11 @@ final class SessionTest extends TestCase
         $this->assertNotSame($before, $after);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\UnknownClassOrInterfaceException
+     */
     #[Test]
     public function reset_clears_singleton_so_global_creates_fresh_instance(): void
     {

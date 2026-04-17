@@ -28,6 +28,12 @@ final class EndToEndTest extends TestCase
         Session::reset();
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function integers_self_equality(TC $tc): void
     {
@@ -35,6 +41,12 @@ final class EndToEndTest extends TestCase
         $this->assertSame($n, $n);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function always_below_50_fails_and_shrinks(): void
     {
@@ -57,6 +69,12 @@ final class EndToEndTest extends TestCase
         $this->assertStringContainsString('50', $result->finalErrors[0]->getMessage());
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function addition_is_commutative(TC $tc): void
     {
@@ -65,6 +83,13 @@ final class EndToEndTest extends TestCase
         $this->assertSame($x + $y, $y + $x);
     }
 
+    /**
+     * @throws \Hegel\Exception\AssumeRejectedException
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function assume_filters_correctly(TC $tc): void
     {
@@ -75,6 +100,13 @@ final class EndToEndTest extends TestCase
         $this->assertGreaterThan(0, $n);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test, Property]
     public function text_generation_produces_strings(TC $tc): void
     {
@@ -83,6 +115,13 @@ final class EndToEndTest extends TestCase
         $this->assertIsString($drawn);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function list_generation_with_bounds(TC $tc): void
     {
@@ -93,6 +132,13 @@ final class EndToEndTest extends TestCase
         $this->assertLessThanOrEqual(5, count($drawn));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test, Property]
     public function boolean_generation(TC $tc): void
     {
@@ -101,6 +147,13 @@ final class EndToEndTest extends TestCase
         $this->assertIsBool($drawn);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function sampled_from_returns_element(TC $tc): void
     {
@@ -108,6 +161,12 @@ final class EndToEndTest extends TestCase
         $this->assertContains($val, ['a', 'b', 'c']);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test, Property(testCases: 50)]
     public function email_generation_contains_at_sign(TC $tc): void
     {
@@ -115,6 +174,12 @@ final class EndToEndTest extends TestCase
         $this->assertStringContainsString('@', $email);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function sort_is_idempotent(TC $tc): void
     {

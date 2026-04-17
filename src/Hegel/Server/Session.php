@@ -32,6 +32,9 @@ final class Session
         }
     }
 
+    /**
+     * @throws ConnectionException
+     */
     public function connection(): Connection
     {
         if ($this->connection !== null && $this->process !== null && $this->process->isRunning()) {
@@ -43,6 +46,9 @@ final class Session
         return $this->connection;
     }
 
+    /**
+     * @throws ConnectionException
+     */
     private function start(): void
     {
         // Clean up stale session

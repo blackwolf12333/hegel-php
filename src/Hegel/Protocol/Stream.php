@@ -85,6 +85,8 @@ final class Stream
     /**
      * Receive a raw reply payload for a given message ID.
      * Blocks until the reply arrives, buffering any out-of-order packets.
+     *
+     * @throws ConnectionException
      */
     public function receiveRawReply(int $messageId): string
     {
@@ -110,6 +112,8 @@ final class Stream
      * Checks for error responses and throws ConnectionException.
      *
      * @return mixed The 'result' field from the reply.
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
      */
     public function receiveReply(int $messageId): mixed
     {
@@ -133,6 +137,9 @@ final class Stream
 
     /**
      * Send a CBOR request and wait for the decoded reply result.
+     *
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
      */
     public function requestCbor(mixed $data): mixed
     {
@@ -143,6 +150,8 @@ final class Stream
     /**
      * Receive an incoming request (non-reply packet).
      * @return array{int, mixed} [messageId, decodedPayload]
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
      */
     public function receiveRequest(): array
     {

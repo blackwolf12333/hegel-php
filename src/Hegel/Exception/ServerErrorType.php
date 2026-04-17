@@ -11,6 +11,9 @@ enum ServerErrorType: string
     case FlakyStrategyDefinition = 'FlakyStrategyDefinition';
     case FlakyReplay = 'FlakyReplay';
 
+    /**
+     * @throws \ValueError
+     */
     public static function fromServerType(string $type): self
     {
         return self::tryFrom($type) ?? throw new \ValueError("Unknown server error type: {$type}");

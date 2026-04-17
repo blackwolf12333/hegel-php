@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 
 final class HegelTraitTest extends TestCase
 {
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function attribute_has_correct_defaults(): void
     {
@@ -19,6 +22,9 @@ final class HegelTraitTest extends TestCase
         $this->assertSame([], $prop->suppressHealthChecks);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function attribute_accepts_custom_values(): void
     {
@@ -32,6 +38,12 @@ final class HegelTraitTest extends TestCase
         $this->assertSame(['filter_too_much'], $prop->suppressHealthChecks);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \ReflectionException
+     */
     #[Test]
     public function property_attribute_is_detectable_via_reflection(): void
     {
@@ -43,6 +55,12 @@ final class HegelTraitTest extends TestCase
         $this->assertSame(200, $prop->testCases);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \ReflectionException
+     */
     #[Test]
     public function non_property_method_has_no_attribute(): void
     {

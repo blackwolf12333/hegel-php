@@ -13,6 +13,9 @@ use PHPUnit\Framework\TestCase;
 
 final class PacketTest extends TestCase
 {
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function write_packet_produces_correct_header_bytes(): void
     {
@@ -59,6 +62,9 @@ final class PacketTest extends TestCase
         $this->assertSame(5, $payloadLen);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function write_packet_crc32_computed_over_header_with_zeroed_checksum_plus_payload(): void
     {
@@ -91,6 +97,9 @@ final class PacketTest extends TestCase
         $this->assertSame($expected, $checksum);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function write_packet_appends_0x0a_terminator(): void
     {
@@ -112,6 +121,10 @@ final class PacketTest extends TestCase
         $this->assertSame(0x0A, ord($data[strlen($data) - 1]));
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function roundtrip_basic_payload(): void
     {
@@ -136,6 +149,10 @@ final class PacketTest extends TestCase
         $this->assertSame($original->payload, $decoded->payload);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function roundtrip_empty_payload(): void
     {
@@ -159,6 +176,10 @@ final class PacketTest extends TestCase
         $this->assertSame(1, $decoded->messageId);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function roundtrip_reply_flag(): void
     {
@@ -182,6 +203,9 @@ final class PacketTest extends TestCase
         $this->assertSame('reply data', $decoded->payload);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     */
     #[Test]
     public function read_rejects_bad_magic(): void
     {
@@ -201,6 +225,9 @@ final class PacketTest extends TestCase
         PacketReader::read($stream);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     */
     #[Test]
     public function read_rejects_bad_checksum(): void
     {
@@ -233,6 +260,9 @@ final class PacketTest extends TestCase
         fclose($corrupted);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     */
     #[Test]
     public function read_rejects_bad_terminator(): void
     {
@@ -264,6 +294,9 @@ final class PacketTest extends TestCase
         fclose($corrupted);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function close_stream_packet_detection(): void
     {
@@ -276,6 +309,9 @@ final class PacketTest extends TestCase
         $this->assertFalse($packet->isReply);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function regular_packet_is_not_close_stream(): void
     {
@@ -288,6 +324,10 @@ final class PacketTest extends TestCase
         $this->assertFalse($packet->isCloseStream());
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function close_stream_packet_roundtrips(): void
     {
@@ -305,6 +345,10 @@ final class PacketTest extends TestCase
         $this->assertSame(7, $decoded->streamId);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function read_returns_null_on_eof(): void
     {
@@ -319,6 +363,9 @@ final class PacketTest extends TestCase
 
     // --- Mutant 89: isCloseStream() && -> || ---
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function is_close_stream_requires_matching_message_id(): void
     {
@@ -332,6 +379,9 @@ final class PacketTest extends TestCase
         $this->assertFalse($packet->isCloseStream());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function is_close_stream_requires_matching_payload(): void
     {
@@ -347,6 +397,10 @@ final class PacketTest extends TestCase
 
     // --- Mutants 90-95: header field substr offsets ---
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function roundtrip_all_distinct_nonzero_header_fields(): void
     {
@@ -373,6 +427,9 @@ final class PacketTest extends TestCase
         $this->assertSame('distinct-payload', $decoded->payload);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function header_checksum_field_is_at_offset_4(): void
     {
@@ -394,16 +451,13 @@ final class PacketTest extends TestCase
         fclose($stream);
 
         // Magic must be at offset 0
-        /** @var mixed $unpackedMagic */
+        /** @var array{1: int} $unpackedMagic */
         $unpackedMagic = unpack('N', substr($data, 0, 4));
-        assert(is_array($unpackedMagic), 'Failed to unpack magic');
         $this->assertSame(Packet::MAGIC, $unpackedMagic[1]);
 
         // Checksum is at offset 4 — if we zero it and recompute, it should match
-        /** @var mixed $unpackedCrc */
+        /** @var array{1: int} $unpackedCrc */
         $unpackedCrc = unpack('N', substr($data, 4, 4));
-        assert(is_array($unpackedCrc), 'Failed to unpack CRC');
-        /** @var mixed $storedCrc */
         $storedCrc = $unpackedCrc[1];
 
         $headerWithZeroed = substr($data, 0, 4) . "\x00\x00\x00\x00" . substr($data, 8, 12);
@@ -411,21 +465,18 @@ final class PacketTest extends TestCase
         $this->assertSame($recomputed, $storedCrc);
 
         // StreamId is at offset 8
-        /** @var mixed $unpackedStream */
+        /** @var array{1: int} $unpackedStream */
         $unpackedStream = unpack('N', substr($data, 8, 4));
-        assert(is_array($unpackedStream), 'Failed to unpack stream ID');
         $this->assertSame(0xAB_CD_EF_01, $unpackedStream[1]);
 
         // MessageId (raw, with reply bit) is at offset 12
-        /** @var mixed $unpackedMsg */
+        /** @var array{1: int} $unpackedMsg */
         $unpackedMsg = unpack('N', substr($data, 12, 4));
-        assert(is_array($unpackedMsg), 'Failed to unpack message ID');
         $this->assertSame(0x0000_0023, $unpackedMsg[1]);
 
         // PayloadLen is at offset 16
-        /** @var mixed $unpackedLen */
+        /** @var array{1: int} $unpackedLen */
         $unpackedLen = unpack('N', substr($data, 16, 4));
-        assert(is_array($unpackedLen), 'Failed to unpack payload length');
         $this->assertSame(strlen('crc-position-check'), $unpackedLen[1]);
     }
 }

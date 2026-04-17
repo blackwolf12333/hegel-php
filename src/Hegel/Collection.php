@@ -15,6 +15,10 @@ final class Collection
         private readonly Stream $stream,
     ) {}
 
+    /**
+     * @throws Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function more(): bool
     {
         /** @var mixed $result */
@@ -23,6 +27,10 @@ final class Collection
         return $result;
     }
 
+    /**
+     * @throws Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function reject(): void
     {
         $this->stream->requestCbor(new CollectionRejectCommand($this->collectionId));

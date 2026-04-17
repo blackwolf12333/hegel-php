@@ -29,6 +29,11 @@ final class TestCase
         $this->noteFn = $noteFn;
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     public function draw(Generator $generator): mixed
     {
         return $generator->draw($this);
@@ -51,6 +56,10 @@ final class TestCase
         }
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function target(float $value, string $label): void
     {
         $this->stream->requestCbor(new TargetCommand($value, $label));
@@ -59,10 +68,10 @@ final class TestCase
     /**
      * Generate a value from a schema by sending a 'generate' command to the server.
      *
-     * @throws DataExhaustedException
-     */
-    /**
      * @param array<string, mixed> $schema
+     * @throws DataExhaustedException
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
      */
     public function generateFromSchema(array $schema): mixed
     {
@@ -76,21 +85,37 @@ final class TestCase
         }
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function startSpan(int $label): void
     {
         $this->stream->requestCbor(new StartSpanCommand($label));
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function stopSpan(): void
     {
         $this->stream->requestCbor(new StopSpanCommand(false));
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function discardSpan(): void
     {
         $this->stream->requestCbor(new StopSpanCommand(true));
     }
 
+    /**
+     * @throws ConnectionException
+     * @throws \InvalidArgumentException
+     */
     public function newCollection(int $minSize, null|int $maxSize): Collection
     {
         /** @var mixed $id */

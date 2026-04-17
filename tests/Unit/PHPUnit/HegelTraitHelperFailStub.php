@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
  */
 final class HegelTraitHelperFailStub extends TestCase
 {
+    /**
+     * @throws \RuntimeException
+     */
     public function myTest(TC $_tc): void
     {
         throw new \RuntimeException('property violated');

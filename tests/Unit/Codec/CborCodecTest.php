@@ -10,24 +10,40 @@ use PHPUnit\Framework\TestCase;
 
 final class CborCodecTest extends TestCase
 {
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_integer(): void
     {
         $this->assertSame(42, CborCodec::decode(CborCodec::encode(42)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_negative_integer(): void
     {
         $this->assertSame(-100, CborCodec::decode(CborCodec::encode(-100)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_string(): void
     {
         $this->assertSame('hello world', CborCodec::decode(CborCodec::encode('hello world')));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_boolean(): void
     {
@@ -35,18 +51,30 @@ final class CborCodecTest extends TestCase
         $this->assertFalse(CborCodec::decode(CborCodec::encode(false)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_null(): void
     {
         $this->assertNull(CborCodec::decode(CborCodec::encode(null)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_float(): void
     {
         $this->assertSame(3.14, CborCodec::decode(CborCodec::encode(3.14)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_map(): void
     {
@@ -56,6 +84,10 @@ final class CborCodecTest extends TestCase
         $this->assertSame($data, $result);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_list(): void
     {
@@ -65,6 +97,10 @@ final class CborCodecTest extends TestCase
         $this->assertSame($data, $result);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_nested_structure(): void
     {
@@ -79,6 +115,9 @@ final class CborCodecTest extends TestCase
         $this->assertSame($data, $result);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function decode_invalid_cbor_throws(): void
     {
@@ -86,12 +125,20 @@ final class CborCodecTest extends TestCase
         CborCodec::decode("\xFF\xFF\xFF");
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_zero(): void
     {
         $this->assertSame(0, CborCodec::decode(CborCodec::encode(0)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_map_with_integer_values(): void
     {
@@ -101,6 +148,10 @@ final class CborCodecTest extends TestCase
         $this->assertSame($data, $result);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_empty_list(): void
     {
@@ -110,18 +161,30 @@ final class CborCodecTest extends TestCase
         $this->assertSame([], $result);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_large_positive_integer(): void
     {
         $this->assertSame(PHP_INT_MAX, CborCodec::decode(CborCodec::encode(PHP_INT_MAX)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_large_negative_integer(): void
     {
         $this->assertSame(PHP_INT_MIN, CborCodec::decode(CborCodec::encode(PHP_INT_MIN)));
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function roundtrip_map_with_large_integers(): void
     {
@@ -132,6 +195,10 @@ final class CborCodecTest extends TestCase
     }
 
     // Mutant 1: >=0 → >0 — value 0 must not be treated as big-int
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_zero_is_not_big_int_tagged(): void
     {
@@ -143,6 +210,10 @@ final class CborCodecTest extends TestCase
 
     // Mutant 2: > CBOR_UINT32_MAX → >= CBOR_UINT32_MAX — value exactly at boundary (0xFFFF_FFFE)
     // must NOT be big-int tagged, should encode as a normal 4-byte uint (first byte 0x1A)
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_value_at_uint32_max_is_not_big_int_tagged(): void
     {
@@ -155,6 +226,10 @@ final class CborCodecTest extends TestCase
     }
 
     // Mutant 2 counterpart: value just above boundary (0xFFFF_FFFF) MUST be big-int tagged
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_value_above_uint32_max_is_big_int_tagged(): void
     {
@@ -168,6 +243,10 @@ final class CborCodecTest extends TestCase
     // Mutant 3: && → || — small positive value like 5 must NOT be big-int tagged
     // With &&: (5 >= 0 && 5 > CBOR_UINT32_MAX) = false → skip (correct)
     // With ||: (5 >= 0 || 5 > CBOR_UINT32_MAX) = true → incorrectly big-int tags 5
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_small_positive_integer_is_not_big_int_tagged(): void
     {
@@ -178,6 +257,10 @@ final class CborCodecTest extends TestCase
 
     // Mutant 4: negative boundary — value -0xFFFF_FFFF: (-1 - (-0xFFFF_FFFF)) = 0xFFFF_FFFE
     // 0xFFFF_FFFE > 0xFFFF_FFFE is false → must NOT be negative big-int tagged
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_negative_value_at_boundary_is_not_big_int_tagged(): void
     {
@@ -190,6 +273,10 @@ final class CborCodecTest extends TestCase
 
     // Mutant 5 counterpart: value -0x1_0000_0000: (-1 - (-0x1_0000_0000)) = 0xFFFF_FFFF
     // 0xFFFF_FFFF > 0xFFFF_FFFE is true → MUST be negative big-int tagged
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_negative_value_above_boundary_is_big_int_tagged(): void
     {
@@ -201,6 +288,10 @@ final class CborCodecTest extends TestCase
     }
 
     // Mutant 9: return $value removed — normal ints must encode to CBOR, not null/empty
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     */
     #[Test]
     public function encode_normal_integer_produces_non_empty_cbor(): void
     {
@@ -214,6 +305,10 @@ final class CborCodecTest extends TestCase
 
     // Mutant 10: strlen($hex) % 2 → % 1 — % 1 is always 0, so padding never happens.
     // Value 0x1_0000_0000 (dechex → "100000000", 9 hex digits, odd length) must encode/decode correctly.
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function encode_big_int_with_odd_hex_length_roundtrips(): void
     {
@@ -223,6 +318,11 @@ final class CborCodecTest extends TestCase
     }
 
     // Mutants 11-15: decode exception format
+    /**
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\InvalidArgumentException
+     */
     #[Test]
     public function decode_invalid_cbor_exception_has_correct_message_prefix(): void
     {
@@ -237,6 +337,10 @@ final class CborCodecTest extends TestCase
     }
 
     // Mutant: concat removal — inner exception message must be appended after the prefix
+    /**
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function decode_invalid_cbor_exception_includes_inner_message(): void
     {

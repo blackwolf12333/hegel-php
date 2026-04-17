@@ -11,6 +11,11 @@ use Hegel\TestCase;
  */
 interface Generator
 {
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     public function draw(TestCase $testCase): mixed;
 
     public function map(\Closure $fn): Generator;

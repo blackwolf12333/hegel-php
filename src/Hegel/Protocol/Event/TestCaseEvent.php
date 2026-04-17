@@ -16,6 +16,7 @@ final readonly class TestCaseEvent
      */
     public static function fromArray(array $data): self
     {
+        assert(array_key_exists('stream_id', $data), 'TestCaseEvent data must contain stream_id');
         return new self(
             streamId: (int) $data['stream_id'],
             isFinal: ($data['is_final'] ?? false) === true,

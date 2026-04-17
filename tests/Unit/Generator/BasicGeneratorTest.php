@@ -45,6 +45,12 @@ final class BasicGeneratorTest extends TestCase
     }
 
     // Mutant: startSpan removal — when spanLabel is set, start_span must be sent before generate
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function draw_with_span_label_sends_start_span_command(): void
     {
@@ -68,30 +74,33 @@ final class BasicGeneratorTest extends TestCase
         // Read the three packets sent: start_span, generate, stop_span
         $p1 = PacketReader::read($serverSock);
         $this->assertNotNull($p1);
-        /** @var mixed $d1 */
+        /** @var array{command: string, label: string} $d1 */
         $d1 = CborCodec::decode($p1->payload);
-        assert(is_array($d1), 'First packet must decode to an array');
         $this->assertSame('start_span', $d1['command'], 'First command must be start_span');
         $this->assertSame(SpanLabel::List_->value, $d1['label']);
 
         $p2 = PacketReader::read($serverSock);
         $this->assertNotNull($p2);
-        /** @var mixed $d2 */
+        /** @var array{command: string} $d2 */
         $d2 = CborCodec::decode($p2->payload);
-        assert(is_array($d2), 'Second packet must decode to an array');
         $this->assertSame('generate', $d2['command'], 'Second command must be generate');
 
         $p3 = PacketReader::read($serverSock);
         $this->assertNotNull($p3);
-        /** @var mixed $d3 */
+        /** @var array{command: string} $d3 */
         $d3 = CborCodec::decode($p3->payload);
-        assert(is_array($d3), 'Third packet must decode to an array');
         $this->assertSame('stop_span', $d3['command'], 'Third command must be stop_span');
 
         fclose($serverSock);
     }
 
     // Mutant: stopSpan removal in finally — stop_span must be sent even if generate returns normally
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function draw_with_span_label_sends_stop_span_after_generate(): void
     {
@@ -115,9 +124,8 @@ final class BasicGeneratorTest extends TestCase
         // The third packet must be stop_span (from the finally block)
         $p3 = PacketReader::read($serverSock);
         $this->assertNotNull($p3, 'stop_span packet must be sent');
-        /** @var mixed $d3 */
+        /** @var array{command: string, discard: bool} $d3 */
         $d3 = CborCodec::decode($p3->payload);
-        assert(is_array($d3), 'Third packet must decode to an array');
         $this->assertSame('stop_span', $d3['command'], 'Finally block must send stop_span');
         $this->assertFalse($d3['discard']);
 
@@ -125,6 +133,12 @@ final class BasicGeneratorTest extends TestCase
     }
 
     // Mutant: startSpan/stopSpan must NOT be sent when spanLabel is null
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function draw_without_span_label_sends_only_generate(): void
     {
@@ -144,9 +158,8 @@ final class BasicGeneratorTest extends TestCase
         // Only one packet must have been sent (the generate command)
         $p1 = PacketReader::read($serverSock);
         $this->assertNotNull($p1);
-        /** @var mixed $d1 */
+        /** @var array{command: string} $d1 */
         $d1 = CborCodec::decode($p1->payload);
-        assert(is_array($d1), 'Packet must decode to an array');
         $this->assertSame('generate', $d1['command']);
 
         // No further packets should be waiting
@@ -159,6 +172,12 @@ final class BasicGeneratorTest extends TestCase
     }
 
     // Mutant: transform closure must be applied to the generated value
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function draw_applies_transform_to_generated_value(): void
     {

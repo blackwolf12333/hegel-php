@@ -36,6 +36,7 @@ final class Connection
      *
      * @param resource $reader Stream resource to read packets from
      * @param resource $writer Stream resource to write packets to
+     * @throws ConnectionException
      */
     public static function fromStreams(mixed $reader, mixed $writer): self
     {
@@ -98,6 +99,8 @@ final class Connection
 
     /**
      * Read one packet from the reader.
+     *
+     * @throws ConnectionException
      */
     public function readPacket(): null|Packet
     {
@@ -127,6 +130,9 @@ final class Connection
         }
     }
 
+    /**
+     * @throws ConnectionException
+     */
     private function performHandshake(): void
     {
         $ctrl = $this->controlStream;

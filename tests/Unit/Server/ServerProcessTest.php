@@ -30,6 +30,10 @@ final class ServerProcessTest extends TestCase
         putenv('HEGEL_SERVER_COMMAND');
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function start_uses_hegel_server_command_env_var_when_set(): void
     {
@@ -44,6 +48,9 @@ final class ServerProcessTest extends TestCase
         $process->stop();
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function start_ignores_empty_hegel_server_command_env_var(): void
     {
@@ -74,6 +81,10 @@ final class ServerProcessTest extends TestCase
         }
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function start_does_not_start_again_when_already_running(): void
     {
@@ -90,6 +101,9 @@ final class ServerProcessTest extends TestCase
         $process->stop();
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     */
     #[Test]
     public function stdin_throws_when_process_not_started(): void
     {
@@ -101,6 +115,9 @@ final class ServerProcessTest extends TestCase
         $process->stdin();
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     */
     #[Test]
     public function stdout_throws_when_process_not_started(): void
     {
@@ -112,6 +129,9 @@ final class ServerProcessTest extends TestCase
         $process->stdout();
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function is_running_returns_false_when_not_started(): void
     {
@@ -120,6 +140,9 @@ final class ServerProcessTest extends TestCase
         $this->assertFalse($process->isRunning());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function stop_is_safe_to_call_when_not_started(): void
     {
@@ -131,6 +154,10 @@ final class ServerProcessTest extends TestCase
         $this->assertFalse($process->isRunning());
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function stdin_and_stdout_are_accessible_after_start(): void
     {
@@ -149,6 +176,10 @@ final class ServerProcessTest extends TestCase
         $process->stop();
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function is_running_returns_false_after_stop(): void
     {

@@ -73,6 +73,13 @@ final class HegelTraitHelperTest extends TestCase
     }
 
     // Mutant 43: when a connection is provided it must be used, not Session::global()
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\FlakyTestException
+     * @throws \LogicException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
+     */
     #[Test]
     public function run_property_test_uses_provided_connection(): void
     {
@@ -99,6 +106,13 @@ final class HegelTraitHelperTest extends TestCase
 
     // Mutant 46: handleResult must be called (assertion count increases)
     // Mutants 49-51: addToAssertionCount(1) — must increase by exactly 1
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\FlakyTestException
+     * @throws \LogicException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
+     */
     #[Test]
     public function run_property_test_increments_assertion_count_by_one_on_pass(): void
     {
@@ -123,6 +137,12 @@ final class HegelTraitHelperTest extends TestCase
     }
 
     // Mutants 47-48: failing property with finalErrors must rethrow the first error
+    /**
+     * @throws \Hegel\Exception\FlakyTestException
+     * @throws \LogicException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
+     */
     #[Test]
     public function run_property_test_rethrows_first_final_error_on_failure(): void
     {
@@ -182,6 +202,12 @@ final class HegelTraitHelperTest extends TestCase
     }
 
     // Mutants 47-48 (other branch): failing property with NO finalErrors must call $testCase->fail()
+    /**
+     * @throws \Hegel\Exception\FlakyTestException
+     * @throws \LogicException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
+     */
     #[Test]
     public function run_property_test_calls_fail_when_not_passed_and_no_final_errors(): void
     {
@@ -223,6 +249,12 @@ final class HegelTraitHelperTest extends TestCase
 
     // Mutant: concat operand removal — seed value must appear in failure message
     // The mutant produces 'Property test failed (seed: )' without the actual seed.
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\FlakyTestException
+     * @throws \LogicException
+     * @throws \Throwable
+     */
     #[Test]
     public function run_property_test_failure_message_includes_seed_value(): void
     {

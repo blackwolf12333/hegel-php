@@ -70,7 +70,7 @@ final class RunnerTest extends TestCase
     /**
      * Find mark_complete commands in a list of packets for a given stream.
      * @param list<Packet> $packets
-     * @return list<array<array-key, mixed>>
+     * @return list<array{command: string, status: string}>
      */
     private function findMarkComplete(array $packets, int $streamId): array
     {
@@ -83,6 +83,7 @@ final class RunnerTest extends TestCase
                 /** @var mixed $decoded */
                 $decoded = CborCodec::decode($p->payload);
                 if (is_array($decoded) && ($decoded['command'] ?? '') === 'mark_complete') {
+                    /** @var array{command: string, status: string} $decoded */
                     $results[] = $decoded;
                 }
             } catch (\Throwable $e) {
@@ -92,6 +93,13 @@ final class RunnerTest extends TestCase
         return $results;
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_valid_test_sends_mark_complete_valid(): void
     {
@@ -146,6 +154,13 @@ final class RunnerTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_assertion_failure_sends_mark_complete_interesting(): void
     {
@@ -209,6 +224,13 @@ final class RunnerTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_assume_rejected_sends_mark_complete_invalid(): void
     {
@@ -258,6 +280,11 @@ final class RunnerTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_handles_health_check_failure(): void
     {
@@ -295,6 +322,11 @@ final class RunnerTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_handles_flaky_detection(): void
     {
@@ -333,6 +365,12 @@ final class RunnerTest extends TestCase
     }
 
     // Mutants 69-70: default $testCases = 100
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_default_test_cases_is_100(): void
     {
@@ -369,9 +407,8 @@ final class RunnerTest extends TestCase
 
         $this->assertNotEmpty($runTestPackets, 'Expected a run_test command on control stream');
 
-        /** @var mixed $decoded */
+        /** @var array{command: string, test_cases: int} $decoded */
         $decoded = CborCodec::decode(array_values($runTestPackets)[0]->payload);
-        assert(is_array($decoded), 'Decoded CBOR must be an array');
         $this->assertSame('run_test', $decoded['command']);
         $this->assertSame(100, $decoded['test_cases']);
 
@@ -379,6 +416,13 @@ final class RunnerTest extends TestCase
     }
 
     // Mutants 71-72: test_done reply value
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_sends_result_key_in_test_done_reply(): void
     {
@@ -415,13 +459,10 @@ final class RunnerTest extends TestCase
 
         // Stream::sendReply() wraps the value in {"result": value}, so the wire payload is
         // {"result": {"result": true}}. Decoding gives the outer map; the inner map is the actual reply.
-        /** @var mixed $decoded */
+        /** @var array{result: array{result: bool}} $decoded */
         $decoded = CborCodec::decode(array_values($replies)[0]->payload);
-        assert(is_array($decoded), 'Decoded CBOR must be an array');
         $this->assertArrayHasKey('result', $decoded, 'outer CBOR wrapper must have result key');
-        /** @var mixed $inner */
         $inner = $decoded['result'];
-        assert(is_array($inner), 'Inner payload must be an array');
         $this->assertArrayHasKey('result', $inner, 'test_done reply must contain result key');
         $this->assertTrue($inner['result'], 'test_done reply result must be true');
 
@@ -429,6 +470,12 @@ final class RunnerTest extends TestCase
     }
 
     // Mutant 73: $testStream->close() after event loop
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_closes_test_stream_after_event_loop(): void
     {
@@ -466,6 +513,13 @@ final class RunnerTest extends TestCase
     }
 
     // Mutants 74-75: test_case acknowledgement reply format
+    /**
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_sends_result_key_in_test_case_acknowledgement(): void
     {
@@ -511,13 +565,10 @@ final class RunnerTest extends TestCase
 
         // Stream::sendReply() wraps the value in {"result": value}, so the wire payload is
         // {"result": {"result": null}}. Decoding gives the outer map.
-        /** @var mixed $decoded */
+        /** @var array{result: array{result: null}} $decoded */
         $decoded = CborCodec::decode($testStreamReplies[0]->payload);
-        assert(is_array($decoded), 'Decoded CBOR must be an array');
         $this->assertArrayHasKey('result', $decoded, 'outer CBOR wrapper must have result key');
-        /** @var mixed $inner */
         $inner = $decoded['result'];
-        assert(is_array($inner), 'Inner payload must be an array');
         $this->assertArrayHasKey('result', $inner, 'test_case ack must contain result key');
         $this->assertNull($inner['result'], 'test_case ack result must be null');
 
@@ -525,6 +576,12 @@ final class RunnerTest extends TestCase
     }
 
     // Mutant 76: $caseStream->close() in runTestCase
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_closes_case_stream_after_test_case(): void
     {
@@ -571,6 +628,12 @@ final class RunnerTest extends TestCase
     // Mutant 77: expected termination ConnectionException treated as VALID, not INTERESTING
     // We test this by throwing a ConnectionException with an expected-termination type directly
     // from the test function (bypassing generateFromSchema which converts StopTest to DataExhaustedException).
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function runner_treats_expected_termination_connection_exception_as_valid(): void
     {

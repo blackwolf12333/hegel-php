@@ -11,6 +11,10 @@ use Hegel\TestCase as TC;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @param list<int> $list
+ * @return list<int>
+ */
 function my_sort(array $list): array
 {
     $result = $list;
@@ -27,6 +31,12 @@ final class MySortTest extends TestCase
 {
     use HegelTrait;
 
+    /**
+     * @throws \InvalidArgumentException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     */
     #[Test, Property]
     public function matches_builtin(TC $tc): void
     {

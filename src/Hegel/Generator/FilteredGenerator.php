@@ -22,6 +22,12 @@ final class FilteredGenerator implements Generator
         private readonly \Closure $predicate,
     ) {}
 
+    /**
+     * @throws AssumeRejectedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {

@@ -8,6 +8,9 @@ use Hegel\SpanLabel;
 
 final class Generators
 {
+    /**
+     * @throws \InvalidArgumentException
+     */
     public static function integers(int $min = PHP_INT_MIN, int $max = PHP_INT_MAX): BasicGenerator
     {
         if ($min > $max) {
@@ -49,6 +52,10 @@ final class Generators
         return new BasicGenerator(['type' => 'constant', 'value' => $value]);
     }
 
+    /**
+     * @param list<mixed> $values
+     * @throws \InvalidArgumentException
+     */
     public static function sampledFrom(array $values): BasicGenerator
     {
         if ($values === []) {
@@ -63,7 +70,7 @@ final class Generators
     }
 
     /**
-     * @param list<mixed> $indexed
+     * @param array<int, mixed> $indexed
      * @return \Closure(mixed): mixed
      */
     private static function makeSampledFromTransform(array $indexed): \Closure
@@ -102,6 +109,9 @@ final class Generators
         ]);
     }
 
+    /**
+     * @throws \InvalidArgumentException
+     */
     public static function oneOf(Generator ...$generators): BasicGenerator
     {
         if ($generators === []) {
@@ -116,7 +126,7 @@ final class Generators
         return new BasicGenerator(
             schema: ['type' => 'one_of', 'generators' => $branches],
             transform: static function (mixed $result): mixed {
-                assert(is_array($result), 'oneOf result must be an array');
+                assert(is_array($result) && array_key_exists(1, $result), 'oneOf result must be an array with index 1');
                 return $result[1];
             },
             spanLabel: SpanLabel::OneOf,
@@ -146,7 +156,7 @@ final class Generators
                 ],
             ],
             transform: static function (mixed $result): mixed {
-                assert(is_array($result), 'optional result must be an array');
+                assert(is_array($result) && array_key_exists(0, $result) && array_key_exists(1, $result), 'optional result must be an array with indices 0 and 1');
                 return $result[0] === 0 ? null : $result[1];
             },
             spanLabel: SpanLabel::Optional,

@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 
 final class TestDoneEventTest extends TestCase
 {
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function interesting_test_cases_defaults_to_zero_when_key_absent(): void
     {
@@ -18,6 +21,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertSame(0, $event->interestingTestCases);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function passed_defaults_to_true_when_key_absent(): void
     {
@@ -26,6 +32,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertTrue($event->passed);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function test_cases_defaults_to_zero_when_key_absent(): void
     {
@@ -34,6 +43,9 @@ final class TestDoneEventTest extends TestCase
         static::assertSame(0, $event->testCases);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function seed_defaults_to_empty_string_when_key_absent(): void
     {
@@ -42,6 +54,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertSame('', $event->seed);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function results_key_itself_defaults_to_empty_array_when_absent(): void
     {
@@ -56,6 +71,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertNull($event->flaky);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function interesting_test_cases_is_parsed_from_results(): void
     {
@@ -64,6 +82,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertSame(3, $event->interestingTestCases);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function passed_is_false_when_explicitly_false(): void
     {
@@ -72,6 +93,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertFalse($event->passed);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function test_cases_is_parsed_from_results(): void
     {
@@ -80,6 +104,9 @@ final class TestDoneEventTest extends TestCase
         static::assertSame(100, $event->testCases);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function seed_is_parsed_from_results(): void
     {
@@ -88,6 +115,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertSame('42', $event->seed);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function error_is_null_when_key_absent(): void
     {
@@ -96,6 +126,9 @@ final class TestDoneEventTest extends TestCase
         $this->assertNull($event->error);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function error_is_set_when_present(): void
     {

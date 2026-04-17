@@ -10,6 +10,9 @@ use PHPUnit\Framework\TestCase;
 
 final class ConnectionExceptionTest extends TestCase
 {
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function default_code_is_zero(): void
     {
@@ -18,6 +21,9 @@ final class ConnectionExceptionTest extends TestCase
         $this->assertSame(0, $exception->getCode());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function message_is_set_correctly(): void
     {
@@ -26,6 +32,9 @@ final class ConnectionExceptionTest extends TestCase
         $this->assertSame('test error', $exception->getMessage());
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function server_error_type_is_null_by_default(): void
     {
@@ -34,6 +43,9 @@ final class ConnectionExceptionTest extends TestCase
         $this->assertNull($exception->serverErrorType);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     */
     #[Test]
     public function custom_code_is_preserved(): void
     {

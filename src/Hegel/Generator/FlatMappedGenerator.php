@@ -19,6 +19,11 @@ final class FlatMappedGenerator implements Generator
         private readonly \Closure $fn,
     ) {}
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {

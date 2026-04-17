@@ -19,6 +19,9 @@ final class ServerProcess
     /** @var resource|null stdout pipe */
     private mixed $stdout = null;
 
+    /**
+     * @throws ConnectionException
+     */
     public function start(): void
     {
         if ($this->process !== null) {
@@ -52,7 +55,10 @@ final class ServerProcess
         }
     }
 
-    /** @return resource */
+    /**
+     * @return resource
+     * @throws ConnectionException
+     */
     public function stdin(): mixed
     {
         if ($this->stdin === null) {
@@ -61,7 +67,10 @@ final class ServerProcess
         return $this->stdin;
     }
 
-    /** @return resource */
+    /**
+     * @return resource
+     * @throws ConnectionException
+     */
     public function stdout(): mixed
     {
         if ($this->stdout === null) {
@@ -113,6 +122,9 @@ final class ServerProcess
         $this->process = null;
     }
 
+    /**
+     * @throws ConnectionException
+     */
     private function resolveCommand(): string
     {
         $envCommand = getenv('HEGEL_SERVER_COMMAND');
@@ -128,6 +140,9 @@ final class ServerProcess
         );
     }
 
+    /**
+     * @throws ConnectionException
+     */
     private function findUv(): string
     {
         // Check PATH

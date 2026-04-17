@@ -19,6 +19,10 @@ final class HegelTraitHelper
 {
     /**
      * @param array<mixed> $testArguments
+     * @throws \LogicException
+     * @throws FlakyTestException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
      */
     public static function runPropertyTest(
         object $caller,
@@ -34,7 +38,6 @@ final class HegelTraitHelper
         $conn = $connection ?? Session::global()->connection();
         $runner = new Runner($conn);
 
-        /** @var list<string> $healthChecks */
         $healthChecks = array_values($property->suppressHealthChecks);
 
         $result = $runner->run(
@@ -52,6 +55,11 @@ final class HegelTraitHelper
         self::handleResult($testCase, $result);
     }
 
+    /**
+     * @throws FlakyTestException
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \Throwable
+     */
     private static function handleResult(TestCase $testCase, RunResult $result): void
     {
         if ($result->healthCheckFailure !== null) {

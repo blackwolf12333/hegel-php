@@ -60,6 +60,9 @@ final class TestCaseTest extends TestCase
         ));
     }
 
+    /**
+     * @throws \Hegel\Exception\AssumeRejectedException
+     */
     #[Test]
     public function reject_throws_assume_rejected(): void
     {
@@ -70,6 +73,10 @@ final class TestCaseTest extends TestCase
         $tc->reject();
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
+     */
     #[Test]
     public function note_calls_note_fn_only_when_final(): void
     {
@@ -93,6 +100,11 @@ final class TestCaseTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function generate_from_schema_sends_generate_command(): void
     {
@@ -107,9 +119,8 @@ final class TestCaseTest extends TestCase
         // Verify what was sent
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
-        /** @var mixed $decoded */
+        /** @var array{command: string, schema: array<string, mixed>} $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('generate', $decoded['command']);
         $this->assertSame($schema, $decoded['schema']);
 
@@ -123,6 +134,12 @@ final class TestCaseTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function generate_from_schema_returns_server_result(): void
     {
@@ -139,14 +156,18 @@ final class TestCaseTest extends TestCase
         // Verify what was sent
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
-        /** @var mixed $decoded */
+        /** @var array{command: string} $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('generate', $decoded['command']);
 
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function generate_from_schema_stop_test_throws_data_exhausted(): void
     {
@@ -162,6 +183,11 @@ final class TestCaseTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function target_sends_target_command(): void
     {
@@ -175,9 +201,8 @@ final class TestCaseTest extends TestCase
 
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
-        /** @var mixed $decoded */
+        /** @var array{command: string, value: float, label: string} $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('target', $decoded['command']);
         $this->assertSame(0.5, $decoded['value']);
         $this->assertSame('score', $decoded['label']);
@@ -185,6 +210,11 @@ final class TestCaseTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function start_stop_span_sends_commands(): void
     {
@@ -201,23 +231,28 @@ final class TestCaseTest extends TestCase
         // Read both packets sent
         $p1 = PacketReader::read($serverSock);
         $this->assertNotNull($p1);
-        /** @var mixed $d1 */
+        /** @var array{command: string, label: int} $d1 */
         $d1 = CborCodec::decode($p1->payload);
-        assert(is_array($d1), 'Decoded CBOR payload must be an array');
         $this->assertSame('start_span', $d1['command']);
         $this->assertSame(1, $d1['label']);
 
         $p2 = PacketReader::read($serverSock);
         $this->assertNotNull($p2);
-        /** @var mixed $d2 */
+        /** @var array{command: string, discard: bool} $d2 */
         $d2 = CborCodec::decode($p2->payload);
-        assert(is_array($d2), 'Decoded CBOR payload must be an array');
         $this->assertSame('stop_span', $d2['command']);
         $this->assertFalse($d2['discard']);
 
         fclose($serverSock);
     }
 
+    /**
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \PHPUnit\Framework\Exception
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \PHPUnit\Framework\UnknownClassOrInterfaceException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function collection_create_sends_new_collection(): void
     {
@@ -232,9 +267,8 @@ final class TestCaseTest extends TestCase
 
         $packet = PacketReader::read($serverSock);
         $this->assertNotNull($packet);
-        /** @var mixed $decoded */
+        /** @var array{command: string, min_size: int, max_size: int} $decoded */
         $decoded = CborCodec::decode($packet->payload);
-        assert(is_array($decoded), 'Decoded CBOR payload must be an array');
         $this->assertSame('new_collection', $decoded['command']);
         $this->assertSame(0, $decoded['min_size']);
         $this->assertSame(10, $decoded['max_size']);
@@ -242,6 +276,11 @@ final class TestCaseTest extends TestCase
         fclose($serverSock);
     }
 
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function collection_more_returns_server_booleans(): void
     {
@@ -261,6 +300,12 @@ final class TestCaseTest extends TestCase
     }
 
     // Mutants 87-88: DataExhaustedException code must be 0
+    /**
+     * @throws \PHPUnit\Framework\AssertionFailedError
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \InvalidArgumentException
+     */
     #[Test]
     public function generate_from_schema_stop_test_throws_data_exhausted_with_code_zero(): void
     {
