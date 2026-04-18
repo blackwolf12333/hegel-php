@@ -9,9 +9,12 @@ use Hegel\TestCase;
 
 /**
  * @internal
+ *
+ * @template-implements SchemaGenerator<string>
  */
 final class DomainGenerator implements SchemaGenerator
 {
+    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<string> */
     use GeneratorCombinatorsTrait;
 
     /**

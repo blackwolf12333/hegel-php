@@ -13,13 +13,21 @@ use Hegel\TestCase;
 
 /**
  * @internal
+ *
+ * @template T
+ * @template-implements Generator<T>
  */
 final class FilteredGenerator implements Generator
 {
+    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<T> */
     use GeneratorCombinatorsTrait;
 
     private const int MAX_ATTEMPTS = 3;
 
+    /**
+     * @param Generator<T> $inner
+     * @param \Closure $predicate
+     */
     public function __construct(
         private readonly Generator $inner,
         private readonly \Closure $predicate,
@@ -34,7 +42,7 @@ final class FilteredGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $testCase->startSpan(SpanLabel::Filter->value);
+        $testCase->startSpan(SpanLabel::Filter);
 
         for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
             /** @var mixed $drawn */

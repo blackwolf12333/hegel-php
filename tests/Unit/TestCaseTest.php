@@ -10,6 +10,7 @@ use Hegel\Exception\AssumeRejectedException;
 use Hegel\Exception\DataExhaustedException;
 use Hegel\Protocol\Connection;
 use Hegel\Protocol\Stream;
+use Hegel\SpanLabel;
 use Hegel\TestCase as HegelTestCase;
 use Hegel\TestPhase;
 use Hegel\Wire\Packet;
@@ -225,7 +226,7 @@ final class TestCaseTest extends TestCase
         $this->replyWithResult($serverSock, $stream->streamId(), 1, null);
         $this->replyWithResult($serverSock, $stream->streamId(), 2, null);
 
-        $tc->startSpan(1);
+        $tc->startSpan(SpanLabel::List_);
         $tc->stopSpan();
 
         // Read both packets sent

@@ -9,6 +9,7 @@ use Hegel\SpanLabel;
 final class Generators
 {
     /**
+     * @return BasicGenerator<int>
      * @throws \InvalidArgumentException
      */
     public static function integers(int $min = PHP_INT_MIN, int $max = PHP_INT_MAX): BasicGenerator
@@ -24,11 +25,19 @@ final class Generators
         return new FloatGenerator();
     }
 
+    /**
+     * @return BasicGenerator<bool>
+     */
     public static function booleans(): BasicGenerator
     {
         return new BasicGenerator(['type' => 'boolean']);
     }
 
+    /**
+     * @param int $minSize
+     * @param int|null $maxSize
+     * @return BasicGenerator<string>
+     */
     public static function text(int $minSize = 0, null|int $maxSize = null): BasicGenerator
     {
         $schema = ['type' => 'string', 'min_size' => $minSize];
@@ -38,6 +47,11 @@ final class Generators
         return new BasicGenerator($schema);
     }
 
+    /**
+     * @param int $minSize
+     * @param int|null $maxSize
+     * @return BasicGenerator<string>
+     */
     public static function binary(int $minSize = 0, null|int $maxSize = null): BasicGenerator
     {
         $schema = ['type' => 'binary', 'min_size' => $minSize];
@@ -47,13 +61,20 @@ final class Generators
         return new BasicGenerator($schema);
     }
 
+    /**
+     * @template T
+     * @param T $value
+     * @return BasicGenerator<T>
+     */
     public static function just(mixed $value): BasicGenerator
     {
         return new BasicGenerator(['type' => 'constant', 'value' => $value]);
     }
 
     /**
-     * @param list<mixed> $values
+     * @template T
+     * @param list<T> $values
+     * @return BasicGenerator<T>
      * @throws \InvalidArgumentException
      */
     public static function sampledFrom(array $values): BasicGenerator
@@ -70,8 +91,9 @@ final class Generators
     }
 
     /**
-     * @param array<int, mixed> $indexed
-     * @return \Closure(mixed): mixed
+     * @template T
+     * @param array<int, T> $indexed
+     * @return \Closure(int): T
      */
     private static function makeSampledFromTransform(array $indexed): \Closure
     {
@@ -81,26 +103,51 @@ final class Generators
         };
     }
 
+    /**
+     * @param string $pattern
+     * @return BasicGenerator<string>
+     */
     public static function fromRegex(string $pattern): BasicGenerator
     {
         return new BasicGenerator(['type' => 'regex', 'pattern' => $pattern, 'fullmatch' => true]);
     }
 
+    /**
+     * @param string $pattern
+     * @return BasicGenerator<string>
+     */
     public static function fromPartialRegex(string $pattern): BasicGenerator
     {
         return new BasicGenerator(['type' => 'regex', 'pattern' => $pattern, 'fullmatch' => false]);
     }
 
-    public static function lists(SchemaGenerator $elements): ListGenerator
+    /**
+     * @template T
+     * @param Generator<T> $elements
+     * @return ListGenerator<T>
+     */
+    public static function lists(Generator $elements): ListGenerator
     {
         return new ListGenerator($elements);
     }
 
-    public static function dicts(SchemaGenerator $keys, SchemaGenerator $values): DictGenerator
+    /**
+     * @template K of array-key
+     * @template V
+     * @param Generator<K> $keys
+     * @param Generator<V> $values
+     * @return DictGenerator<K, V>
+     */
+    public static function dicts(Generator $keys, Generator $values): DictGenerator
     {
         return new DictGenerator($keys, $values);
     }
 
+    /**
+     * @template T
+     * @param SchemaGenerator<T> ...$elements
+     * @return BasicGenerator<list<T>>
+     */
     public static function tuples(SchemaGenerator ...$elements): BasicGenerator
     {
         return new BasicGenerator([
@@ -110,6 +157,9 @@ final class Generators
     }
 
     /**
+     * @template T
+     * @param SchemaGenerator<T> ...$generators
+     * @return BasicGenerator<T>
      * @throws \InvalidArgumentException
      */
     public static function oneOf(SchemaGenerator ...$generators): BasicGenerator
@@ -133,6 +183,11 @@ final class Generators
         );
     }
 
+    /**
+     * @template T
+     * @param SchemaGenerator<T> $element
+     * @return BasicGenerator<T|null>
+     */
     public static function optional(SchemaGenerator $element): BasicGenerator
     {
         return new BasicGenerator(
@@ -163,11 +218,17 @@ final class Generators
         );
     }
 
+    /**
+     * @return BasicGenerator<string>
+     */
     public static function emails(): BasicGenerator
     {
         return new BasicGenerator(['type' => 'email']);
     }
 
+    /**
+     * @return BasicGenerator<string>
+     */
     public static function urls(): BasicGenerator
     {
         return new BasicGenerator(['type' => 'url']);
@@ -178,23 +239,39 @@ final class Generators
         return new DomainGenerator();
     }
 
+    /**
+     * @return BasicGenerator<string>
+     */
     public static function ipv4(): BasicGenerator
     {
         return new BasicGenerator(['type' => 'ipv4']);
     }
 
+    /**
+     * @return BasicGenerator<string>
+     */
     public static function ipv6(): BasicGenerator
     {
         return new BasicGenerator(['type' => 'ipv6']);
     }
 
+    /**
+     * @return BasicGenerator<string>
+     */
     public static function dates(): BasicGenerator
     {
-        return new BasicGenerator(['type' => 'date']);
+        // TODO(@blackwolf12333): transform to DateTime
+        return new BasicGenerator(
+            ['type' => 'date'],
+        );
     }
 
+    /**
+     * @return BasicGenerator<string>
+     */
     public static function datetimes(): BasicGenerator
     {
+        // TODO(@blackwolf12333): transform to DateTime
         return new BasicGenerator(['type' => 'datetime']);
     }
 }

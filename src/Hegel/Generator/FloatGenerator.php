@@ -9,9 +9,12 @@ use Hegel\TestCase;
 
 /**
  * @internal
+ *
+ * @template-implements SchemaGenerator<float>
  */
 final class FloatGenerator implements SchemaGenerator
 {
+    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<float> */
     use GeneratorCombinatorsTrait;
 
     public function __construct(

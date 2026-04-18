@@ -10,11 +10,21 @@ use Hegel\TestCase;
 
 /**
  * @internal
+ *
+ * @template TIn
+ * @template TOut
+ *
+ * @template-implements Generator<TOut>
  */
 final class FlatMappedGenerator implements Generator
 {
+    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<TIn> */
     use GeneratorCombinatorsTrait;
 
+    /**
+     * @param Generator<TIn> $inner
+     * @param \Closure(TIn): Generator<TOut> $fn
+     */
     public function __construct(
         private readonly Generator $inner,
         private readonly \Closure $fn,
@@ -28,7 +38,7 @@ final class FlatMappedGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $testCase->startSpan(SpanLabel::FlatMap->value);
+        $testCase->startSpan(SpanLabel::FlatMap);
         try {
             /** @var mixed $derived */
             $derived = ($this->fn)($this->inner->draw($testCase));

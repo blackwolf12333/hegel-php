@@ -5,17 +5,27 @@ declare(strict_types=1);
 namespace Hegel\Generator;
 
 use Hegel\Exception\ProtocolException;
+use Hegel\SpanLabel;
 use Hegel\TestCase;
 
 /**
  * @internal
+ *
+ * @template T
+ * @template-implements SchemaGenerator<list<T>>
  */
 final class ListGenerator implements SchemaGenerator
 {
+    /** @use GeneratorCombinatorsTrait<list<T>> */
     use GeneratorCombinatorsTrait;
 
+    /**
+     * @param Generator<T> $elements
+     * @param int $minSize
+     * @param int|null $maxSize
+     */
     public function __construct(
-        private SchemaGenerator $elements,
+        private Generator $elements,
         private int $minSize = 0,
         private null|int $maxSize = null,
     ) {}
@@ -50,6 +60,8 @@ final class ListGenerator implements SchemaGenerator
     #[\Override]
     public function schema(): array
     {
+        assert($this->elements instanceof SchemaGenerator, 'Elements generator should be a SchemaGenerator');
+
         $schema = [
             'type' => 'list',
             'elements' => $this->elements->schema(),
@@ -71,6 +83,20 @@ final class ListGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        return $testCase->generateFromSchema($this->schema());
+        if ($this->elements instanceof SchemaGenerator) {
+            return $testCase->generateFromSchema($this->schema());
+        }
+
+        $testCase->startSpan(SpanLabel::List_);
+        $result = [];
+        $collection = $testCase->newCollection($this->minSize, $this->maxSize);
+
+        while ($collection->more()) {
+            $result[] = $this->elements->draw($testCase);
+        }
+
+        $testCase->stopSpan();
+
+        return $result;
     }
 }

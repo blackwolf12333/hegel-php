@@ -10,11 +10,19 @@ use Hegel\TestCase;
 
 /**
  * @internal
+ * @template TIn
+ * @template TOut
+ * @template-implements Generator<TOut>
  */
 final class MappedGenerator implements Generator
 {
+    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<TIn> */
     use GeneratorCombinatorsTrait;
 
+    /**
+     * @param Generator<TIn> $inner
+     * @param \Closure(TIn): TOut $fn
+     */
     public function __construct(
         private readonly Generator $inner,
         private readonly \Closure $fn,
@@ -28,7 +36,7 @@ final class MappedGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $testCase->startSpan(SpanLabel::Mapped->value);
+        $testCase->startSpan(SpanLabel::Mapped);
         try {
             return ($this->fn)($this->inner->draw($testCase));
         } finally {

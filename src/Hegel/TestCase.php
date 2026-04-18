@@ -31,6 +31,9 @@ final class TestCase
     }
 
     /**
+     * @template T
+     * @param Generator<T> $generator
+     * @return T
      * @throws ConnectionException|ProtocolException
      * @throws DataExhaustedException
      * @throws \InvalidArgumentException
@@ -90,9 +93,9 @@ final class TestCase
      * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
-    public function startSpan(int $label): void
+    public function startSpan(SpanLabel $label): void
     {
-        $this->stream->requestCbor(new StartSpanCommand($label));
+        $this->stream->requestCbor(new StartSpanCommand($label->value));
     }
 
     /**

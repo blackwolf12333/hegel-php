@@ -37,7 +37,7 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function integers_self_equality(TC $tc): void
     {
-        $n = (int) $tc->draw(gen::integers(-1000, 1000));
+        $n = $tc->draw(gen::integers(-1000, 1000));
         $this->assertSame($n, $n);
     }
 
@@ -78,8 +78,8 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function addition_is_commutative(TC $tc): void
     {
-        $x = (int) $tc->draw(gen::integers(-1000, 1000));
-        $y = (int) $tc->draw(gen::integers(-1000, 1000));
+        $x = $tc->draw(gen::integers(-1000, 1000));
+        $y = $tc->draw(gen::integers(-1000, 1000));
         $this->assertSame($x + $y, $y + $x);
     }
 
@@ -93,7 +93,7 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function assume_filters_correctly(TC $tc): void
     {
-        $n = (int) $tc->draw(gen::integers(0, 100));
+        $n = $tc->draw(gen::integers(0, 100));
         if ($n <= 0) {
             $tc->reject();
         }
@@ -110,8 +110,8 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function text_generation_produces_strings(TC $tc): void
     {
-        /** @var mixed $drawn */
         $drawn = $tc->draw(gen::text(0, 100));
+        // @mago-expect analyzer:redundant-type-comparison
         $this->assertIsString($drawn);
     }
 
@@ -125,8 +125,8 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function list_generation_with_bounds(TC $tc): void
     {
-        /** @var mixed $drawn */
         $drawn = $tc->draw(gen::lists(gen::integers(0, 100))->minSize(1)->maxSize(5));
+        // @mago-expect analyzer:redundant-type-comparison
         $this->assertIsArray($drawn);
         $this->assertGreaterThanOrEqual(1, count($drawn));
         $this->assertLessThanOrEqual(5, count($drawn));
@@ -142,8 +142,8 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function boolean_generation(TC $tc): void
     {
-        /** @var mixed $drawn */
         $drawn = $tc->draw(gen::booleans());
+        // @mago-expect analyzer:redundant-type-comparison
         $this->assertIsBool($drawn);
     }
 
@@ -157,7 +157,7 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function sampled_from_returns_element(TC $tc): void
     {
-        $val = (string) $tc->draw(gen::sampledFrom(['a', 'b', 'c']));
+        $val = $tc->draw(gen::sampledFrom(['a', 'b', 'c']));
         $this->assertContains($val, ['a', 'b', 'c']);
     }
 
@@ -170,7 +170,7 @@ final class EndToEndTest extends TestCase
     #[Test, Property(testCases: 50)]
     public function email_generation_contains_at_sign(TC $tc): void
     {
-        $email = (string) $tc->draw(gen::emails());
+        $email = $tc->draw(gen::emails());
         $this->assertStringContainsString('@', $email);
     }
 
@@ -183,10 +183,9 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function sort_is_idempotent(TC $tc): void
     {
-        /** @var mixed $drawn */
         $drawn = $tc->draw(gen::lists(gen::integers(0, 100)));
+        // @mago-expect analyzer:redundant-type-comparison
         assert(is_array($drawn), 'List draw must return an array');
-        /** @var list<int> $list */
         $list = $drawn;
         sort($list);
         $sorted = $list;
@@ -197,12 +196,41 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function list_generated_out_of_sample_from(TC $tc): void
     {
-        $val = (array) $tc->draw(gen::lists(gen::sampledFrom(['a', 'b', 'c']))->minSize(1)->maxSize(1));
+        $val = $tc->draw(gen::lists(gen::sampledFrom(['a', 'b', 'c']))->minSize(1)->maxSize(1));
 
-        $anyInArray = in_array('a', $val)
-            || in_array('b', $val)
-            || in_array('c', $val);
+        $anyInArray = in_array('a', $val, true)
+            || in_array('b', $val, true)
+            || in_array('c', $val, true);
 
         $this->assertTrue($anyInArray, "'a', 'b', or 'c' not found in " . print_r($val, true));
+    }
+
+    #[Test, Property]
+    public function list_of_filtered_generator_should_never_contain_filtered_elements(TC $tc): void
+    {
+        $val = $tc->draw(
+            gen::lists(gen::sampledFrom(['a', 'b', 'c'])->filter(static fn($value) => $value !== 'b'))
+                ->minSize(1)
+                ->maxSize(10)
+        );
+
+        $this->assertNotContains('b', $val, 'List should never contain \'b\': ' . print_r($val, true));
+    }
+
+    #[Test, Property]
+    public function dict_of_filtered_generators_should_never_contain_filtered_elements(TC $tc): void
+    {
+        $val = $tc->draw(
+            gen::dicts(
+                gen::sampledFrom(['a', 'b', 'c'])->filter(static fn($value) => $value !== 'b'),
+                gen::sampledFrom([1, 2, 3])->filter(static fn($value) => $value !== 2)
+            )
+        );
+
+        $keys = array_keys($val);
+        $values = array_values($val);
+
+        $this->assertNotContains('b', $keys, 'Keys should never contain filtered value (\'b\'): '. print_r($keys, true));
+        $this->assertNotContains(2, $values, 'Keys should never contain filtered value (\'2\'): '. print_r($values, true));
     }
 }

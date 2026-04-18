@@ -10,6 +10,9 @@ namespace Hegel\Generator;
  * Schema generators produce schemas sent to the hegel-core server.
  * Composed generators (map/filter/flatMap) operate at the PHP level
  * and do not implement this interface.
+ *
+ * @template T
+ * @template-implements Generator<T>
  */
 interface SchemaGenerator extends Generator
 {
