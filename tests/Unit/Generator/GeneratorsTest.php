@@ -411,9 +411,16 @@ final class GeneratorsTest extends TestCase
      * @throws \PHPUnit\Framework\UnknownClassOrInterfaceException
      */
     #[Test]
-    public function map_creates_mapped_generator(): void
+    public function map_on_basic_generator_creates_basic_generator_with_transform(): void
     {
         $gen = gen::integers(0, 10)->map(static fn(int $n): int => $n * 2);
+        $this->assertInstanceOf(BasicGenerator::class, $gen);
+    }
+
+    #[Test]
+    public function map_on_complex_generator_creates_basic_generator_with_transform(): void
+    {
+        $gen = gen::integers(0, 10)->filter(static fn(int $n) => $n % 2 === 0)->map(static fn(int $n): int => $n * 2);
         $this->assertInstanceOf(MappedGenerator::class, $gen);
     }
 

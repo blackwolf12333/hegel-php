@@ -167,7 +167,7 @@ final class EndToEndTest extends TestCase
      * @throws \Hegel\Exception\DataExhaustedException
      * @throws \InvalidArgumentException
      */
-    #[Test, Property(testCases: 50)]
+    #[Test, Property]
     public function email_generation_contains_at_sign(TC $tc): void
     {
         $email = $tc->draw(gen::emails());
@@ -183,10 +183,7 @@ final class EndToEndTest extends TestCase
     #[Test, Property]
     public function sort_is_idempotent(TC $tc): void
     {
-        $drawn = $tc->draw(gen::lists(gen::integers(0, 100)));
-        // @mago-expect analyzer:redundant-type-comparison
-        assert(is_array($drawn), 'List draw must return an array');
-        $list = $drawn;
+        $list = $tc->draw(gen::lists(gen::integers(0, 100)));
         sort($list);
         $sorted = $list;
         sort($sorted);
