@@ -9,7 +9,7 @@ use Hegel\TestCase;
 /**
  * @internal Do not implement directly. Use Generators factory methods.
  */
-interface Generator extends SchemaGenerator
+interface Generator
 {
     /**
      * @throws \Hegel\Exception\ConnectionException

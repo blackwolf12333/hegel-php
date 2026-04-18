@@ -35,10 +35,4 @@ final class MappedGenerator implements Generator
             $testCase->stopSpan();
         }
     }
-
-    #[\Override]
-    public function schema(): array
-    {
-        return $this->inner->schema();
-    }
 }
