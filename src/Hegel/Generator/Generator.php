@@ -21,6 +21,11 @@ interface Generator
     public function draw(TestCase $testCase): mixed;
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public function schema(): ?array;
+
+    /**
      * @template TOut
      * @param \Closure(T): TOut $fn
      * @return Generator<TOut>

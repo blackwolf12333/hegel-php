@@ -83,7 +83,7 @@ final class ListGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        if ($this->elements instanceof SchemaGenerator) {
+        if ($this->elements->schema() !== null) {
             return $testCase->generateFromSchema($this->schema());
         }
 

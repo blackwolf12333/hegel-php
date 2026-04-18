@@ -33,6 +33,12 @@ final class FilteredGenerator implements Generator
         private readonly \Closure $predicate,
     ) {}
 
+    #[\Override]
+    public function schema(): ?array
+    {
+        return null;
+    }
+
     /**
      * @throws AssumeRejectedException
      * @throws ConnectionException|ProtocolException

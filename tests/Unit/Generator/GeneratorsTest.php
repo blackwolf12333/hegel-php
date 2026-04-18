@@ -163,12 +163,9 @@ final class GeneratorsTest extends TestCase
     public function sampled_from_schema(): void
     {
         $gen = gen::sampledFrom(['a', 'b', 'c']);
-        /** @var array{type: string, min_value: int, max_value: int} $schema */
         $schema = $gen->schema();
-        // SampledFrom is implemented as integer gen [0, len-1] with client-side indexing
-        $this->assertSame('integer', $schema['type']);
-        $this->assertSame(0, $schema['min_value']);
-        $this->assertSame(2, $schema['max_value']);
+        // SampledFrom is implemented as a transform with spans
+        $this->assertNull( $schema);
     }
 
     /**
@@ -284,11 +281,9 @@ final class GeneratorsTest extends TestCase
     public function one_of_schema(): void
     {
         $gen = gen::oneOf(gen::integers(0, 10), gen::booleans());
-        /** @var array{type: string, generators: list<array<string, mixed>>} $schema */
         $schema = $gen->schema();
-        $this->assertSame('one_of', $schema['type']);
-        $generators = $schema['generators'];
-        $this->assertCount(2, $generators);
+        // oneOf is implemented as a transform with spans
+        $this->assertNull($schema);
     }
 
     /**

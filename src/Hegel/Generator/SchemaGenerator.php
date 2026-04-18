@@ -16,6 +16,4 @@ namespace Hegel\Generator;
  */
 interface SchemaGenerator extends Generator
 {
-    /** @return array<string, mixed> */
-    public function schema(): array;
 }

@@ -146,14 +146,11 @@ final class Generators
     /**
      * @template T
      * @param SchemaGenerator<T> ...$elements
-     * @return BasicGenerator<list<T>>
+     * @return TupleGenerator<T>
      */
-    public static function tuples(SchemaGenerator ...$elements): BasicGenerator
+    public static function tuples(SchemaGenerator ...$elements): TupleGenerator
     {
-        return new BasicGenerator([
-            'type' => 'tuple',
-            'elements' => array_map(static fn(SchemaGenerator $g): array => $g->schema(), $elements),
-        ]);
+        return new TupleGenerator($elements);
     }
 
     /**

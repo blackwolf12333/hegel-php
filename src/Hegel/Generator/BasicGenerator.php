@@ -18,7 +18,9 @@ use Hegel\TestCase;
 final class BasicGenerator implements SchemaGenerator
 {
     /** @use \Hegel\Generator\GeneratorCombinatorsTrait<T> */
-    use GeneratorCombinatorsTrait;
+    use GeneratorCombinatorsTrait {
+        map as genericMap;
+    }
 
     /**
      * @param array<string, mixed> $schema
@@ -31,10 +33,13 @@ final class BasicGenerator implements SchemaGenerator
         private readonly ?SpanLabel $spanLabel = null,
     ) {}
 
-    /** @return array<string, mixed> */
     #[\Override]
-    public function schema(): array
+    public function schema(): ?array
     {
+        if ($this->transform !== null) {
+            return null;
+        }
+
         return $this->schema;
     }
 
@@ -74,11 +79,15 @@ final class BasicGenerator implements SchemaGenerator
 
     #[\Override]
     public function map(Closure $fn): Generator {
-        return new BasicGenerator(
-            $this->schema(),
-            fn(mixed $value) => $this->transform !== null
-                ? $fn(($this->transform)($value))
-                : $fn($value),
-        );
+        if ($this->transform === null) {
+            return new BasicGenerator(
+                // @mago-expect analyzer:possibly-null-argument
+                // because $this->transform is null this will always have a schema
+                $this->schema(),
+                $fn
+            );
+        }
+
+        return $this->genericMap($fn);
     }
 }

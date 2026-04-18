@@ -28,6 +28,12 @@ final class MappedGenerator implements Generator
         private readonly \Closure $fn,
     ) {}
 
+    #[\Override]
+    public function schema(): ?array
+    {
+        return null;
+    }
+
     /**
      * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \Hegel\Exception\DataExhaustedException
