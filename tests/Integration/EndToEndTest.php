@@ -193,4 +193,16 @@ final class EndToEndTest extends TestCase
         sort($sorted);
         $this->assertEquals($list, $sorted);
     }
+
+    #[Test, Property]
+    public function list_generated_out_of_sample_from(TC $tc): void
+    {
+        $val = (array) $tc->draw(gen::lists(gen::sampledFrom(['a', 'b', 'c']))->minSize(1)->maxSize(1));
+
+        $anyInArray = in_array('a', $val)
+            || in_array('b', $val)
+            || in_array('c', $val);
+
+        $this->assertTrue($anyInArray, "'a', 'b', or 'c' not found in " . print_r($val, true));
+    }
 }
