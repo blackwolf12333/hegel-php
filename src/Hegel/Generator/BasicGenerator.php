@@ -11,7 +11,7 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class BasicGenerator implements Generator
+final class BasicGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 

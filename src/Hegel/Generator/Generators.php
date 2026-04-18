@@ -91,28 +91,28 @@ final class Generators
         return new BasicGenerator(['type' => 'regex', 'pattern' => $pattern, 'fullmatch' => false]);
     }
 
-    public static function lists(Generator $elements): ListGenerator
+    public static function lists(SchemaGenerator $elements): ListGenerator
     {
         return new ListGenerator($elements);
     }
 
-    public static function dicts(Generator $keys, Generator $values): DictGenerator
+    public static function dicts(SchemaGenerator $keys, SchemaGenerator $values): DictGenerator
     {
         return new DictGenerator($keys, $values);
     }
 
-    public static function tuples(Generator ...$elements): BasicGenerator
+    public static function tuples(SchemaGenerator ...$elements): BasicGenerator
     {
         return new BasicGenerator([
             'type' => 'tuple',
-            'elements' => array_map(static fn(Generator $g): array => $g->schema(), $elements),
+            'elements' => array_map(static fn(SchemaGenerator $g): array => $g->schema(), $elements),
         ]);
     }
 
     /**
      * @throws \InvalidArgumentException
      */
-    public static function oneOf(Generator ...$generators): BasicGenerator
+    public static function oneOf(SchemaGenerator ...$generators): BasicGenerator
     {
         if ($generators === []) {
             throw new \InvalidArgumentException('oneOf requires at least one generator');
@@ -133,7 +133,7 @@ final class Generators
         );
     }
 
-    public static function optional(Generator $element): BasicGenerator
+    public static function optional(SchemaGenerator $element): BasicGenerator
     {
         return new BasicGenerator(
             schema: [

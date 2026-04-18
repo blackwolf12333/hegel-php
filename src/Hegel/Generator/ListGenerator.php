@@ -10,12 +10,12 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class ListGenerator implements Generator
+final class ListGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 
     public function __construct(
-        private Generator $elements,
+        private SchemaGenerator $elements,
         private int $minSize = 0,
         private null|int $maxSize = null,
     ) {}

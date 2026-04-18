@@ -10,7 +10,7 @@ use Hegel\TestCase;
 /**
  * @internal
  */
-final class DomainGenerator implements Generator
+final class DomainGenerator implements SchemaGenerator
 {
     use GeneratorCombinatorsTrait;
 

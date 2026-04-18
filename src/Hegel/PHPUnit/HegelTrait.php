@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Hegel\PHPUnit;
 
-use PHPUnit\Framework\TestCase;
-
 /**
  * Trait for PHPUnit test cases that use Hegel property-based testing.
  *
@@ -21,8 +19,6 @@ use PHPUnit\Framework\TestCase;
  *       $y = $tc->draw(gen::integers(-1000, 1000));
  *       $this->assertSame($x + $y, $y + $x);
  *   }
- *
- * @mixin TestCase
  */
 trait HegelTrait
 {
