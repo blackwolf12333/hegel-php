@@ -14,16 +14,23 @@ final class DomainGenerator implements Generator
 {
     use GeneratorCombinatorsTrait;
 
+    /**
+     * @param positive-int $maxLength
+     */
     public function __construct(
         private readonly int $maxLength = 255,
     ) {}
 
+    /**
+     * @param positive-int $value
+     * @return self
+     */
     public function maxLength(int $value): self
     {
         return new self($value);
     }
 
-    /** @return array<string, mixed> */
+    /** @return array{type: 'domain', max_length: positive-int} */
     #[\Override]
     public function schema(): array
     {

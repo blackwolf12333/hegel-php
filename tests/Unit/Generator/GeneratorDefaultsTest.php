@@ -65,6 +65,14 @@ final class GeneratorDefaultsTest extends TestCase
         $this->assertSame(255, $schema['max_length']);
     }
 
+    #[Test]
+    public function domains_schema_includes_max_length_when_set(): void
+    {
+        $gen = gen::domains()->maxLength(12);
+        $schema = $gen->schema();
+        $this->assertSame(12, $schema['max_length']);
+    }
+
     /**
      * @throws \PHPUnit\Framework\Exception
      * @throws \PHPUnit\Framework\ExpectationFailedException

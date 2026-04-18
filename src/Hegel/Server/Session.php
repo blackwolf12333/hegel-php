@@ -67,7 +67,7 @@ final class Session
         }
     }
 
-    public function stop(): void
+    private function stop(): void
     {
         $this->connection = null;
         if ($this->process !== null) {
