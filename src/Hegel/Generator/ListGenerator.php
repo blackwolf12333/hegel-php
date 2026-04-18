@@ -88,15 +88,18 @@ final class ListGenerator implements SchemaGenerator
         }
 
         $testCase->startSpan(SpanLabel::List_);
-        $result = [];
-        $collection = $testCase->newCollection($this->minSize, $this->maxSize);
 
-        while ($collection->more()) {
-            $result[] = $this->elements->draw($testCase);
+        try {
+            $result = [];
+            $collection = $testCase->newCollection($this->minSize, $this->maxSize);
+
+            while ($collection->more()) {
+                $result[] = $this->elements->draw($testCase);
+            }
+
+            return $result;
+        } finally {
+            $testCase->stopSpan();
         }
-
-        $testCase->stopSpan();
-
-        return $result;
     }
 }
