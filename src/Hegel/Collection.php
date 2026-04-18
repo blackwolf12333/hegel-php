@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hegel;
 
+use Hegel\Exception\ProtocolException;
 use Hegel\Protocol\Command\CollectionMoreCommand;
 use Hegel\Protocol\Command\CollectionRejectCommand;
 use Hegel\Protocol\Stream;
@@ -16,7 +17,7 @@ final class Collection
     ) {}
 
     /**
-     * @throws Exception\ConnectionException
+     * @throws Exception\ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function more(): bool
@@ -28,7 +29,7 @@ final class Collection
     }
 
     /**
-     * @throws Exception\ConnectionException
+     * @throws Exception\ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function reject(): void

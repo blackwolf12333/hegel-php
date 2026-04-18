@@ -31,6 +31,7 @@ excessive-parameter-list = { enabled = false }
 
 [analyzer]
 plugins = []
+ignore = [{"code" = "unhandled-thrown-type", in = "tests"}]
 find-unused-definitions = true
 find-unused-expressions = true
 analyze-dead-code = true

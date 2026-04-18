@@ -6,6 +6,7 @@ namespace Hegel\Protocol;
 
 use Hegel\Codec\CborCodec;
 use Hegel\Exception\ConnectionException;
+use Hegel\Exception\ProtocolException;
 use Hegel\Protocol\Command\Command;
 use Hegel\Wire\Packet;
 
@@ -87,6 +88,7 @@ final class Stream
      * Blocks until the reply arrives, buffering any out-of-order packets.
      *
      * @throws ConnectionException
+     * @throws \Hegel\Exception\ProtocolException
      */
     public function receiveRawReply(int $messageId): string
     {
@@ -112,7 +114,7 @@ final class Stream
      * Checks for error responses and throws ConnectionException.
      *
      * @return mixed The 'result' field from the reply.
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function receiveReply(int $messageId): mixed
@@ -138,7 +140,7 @@ final class Stream
     /**
      * Send a CBOR request and wait for the decoded reply result.
      *
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function requestCbor(mixed $data): mixed
@@ -151,6 +153,7 @@ final class Stream
      * Receive an incoming request (non-reply packet).
      * @return array{int, mixed} [messageId, decodedPayload]
      * @throws ConnectionException
+     * @throws \Hegel\Exception\ProtocolException
      * @throws \InvalidArgumentException
      */
     public function receiveRequest(): array
@@ -208,6 +211,7 @@ final class Stream
      * Read the next packet destined for this stream, dispatching foreign packets.
      *
      * @throws ConnectionException If the connection is closed.
+     * @throws \Hegel\Exception\ProtocolException If a packet arrives for a closed stream.
      */
     private function readNextOwnPacket(string $waitingFor): Packet
     {

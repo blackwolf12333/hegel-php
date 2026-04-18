@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hegel\Generator;
 
+use Hegel\Exception\ProtocolException;
 use Hegel\SpanLabel;
 use Hegel\TestCase;
 
@@ -32,7 +33,7 @@ final class BasicGenerator implements Generator
     }
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \Hegel\Exception\DataExhaustedException
      * @throws \InvalidArgumentException
      */

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hegel\Protocol;
 
 use Hegel\Exception\ConnectionException;
+use Hegel\Exception\ProtocolException;
 use Hegel\Wire\Packet;
 use Hegel\Wire\PacketReader;
 use Hegel\Wire\PacketWriter;
@@ -16,6 +17,12 @@ final class Connection
 
     /** @var array<int, Stream> Registered streams keyed by stream ID */
     private array $streams = [];
+
+    /** @var array<int, list<Packet>> Packets for streams not yet connected */
+    private array $pendingPackets = [];
+
+    /** @var array<int, true> Stream IDs that were explicitly closed */
+    private array $closedStreams = [];
 
     private Stream $controlStream;
 
@@ -36,7 +43,7 @@ final class Connection
      *
      * @param resource $reader Stream resource to read packets from
      * @param resource $writer Stream resource to write packets to
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      */
     public static function fromStreams(mixed $reader, mixed $writer): self
     {
@@ -81,12 +88,21 @@ final class Connection
     {
         $stream = new Stream($streamId, $this);
         $this->streams[$streamId] = $stream;
+
+        if (array_key_exists($streamId, $this->pendingPackets)) {
+            foreach ($this->pendingPackets[$streamId] as $packet) {
+                $stream->bufferPacket($packet);
+            }
+            unset($this->pendingPackets[$streamId]);
+        }
+
         return $stream;
     }
 
     public function unregisterStream(int $streamId): void
     {
         unset($this->streams[$streamId]);
+        $this->closedStreams[$streamId] = true;
     }
 
     /**
@@ -109,14 +125,24 @@ final class Connection
 
     /**
      * Dispatch a packet to the correct stream's buffer.
+     *
+     * @throws ProtocolException If the stream was explicitly closed.
      */
     public function dispatchPacket(Packet $packet): void
     {
         if (array_key_exists($packet->streamId, $this->streams)) {
             $this->streams[$packet->streamId]->bufferPacket($packet);
+            return;
         }
 
-        // Packets for unknown streams are silently dropped
+        if (array_key_exists($packet->streamId, $this->closedStreams)) {
+            throw new ProtocolException(
+                sprintf('Received packet for closed stream %d', $packet->streamId),
+            );
+        }
+
+        // Buffer packets for streams that haven't been connected yet
+        $this->pendingPackets[$packet->streamId][] = $packet;
     }
 
     /**
@@ -131,7 +157,7 @@ final class Connection
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      */
     private function performHandshake(): void
     {

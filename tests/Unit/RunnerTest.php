@@ -537,8 +537,7 @@ final class RunnerTest extends TestCase
             'stream_id' => $caseStreamId,
             'is_final' => false,
         ]);
-        $this->reply($serverSock, $caseStreamId, 1, ['result' => null]); // generate reply (not needed, no draw)
-        $this->reply($serverSock, $caseStreamId, 2, ['result' => null]); // mark_complete reply
+        $this->reply($serverSock, $caseStreamId, 1, ['result' => null]); // mark_complete reply
         $this->serverRequest($serverSock, $testStreamId, 2, [
             'event' => 'test_done',
             'results' => [
@@ -651,8 +650,6 @@ final class RunnerTest extends TestCase
             'stream_id' => $caseStreamId,
             'is_final' => false,
         ]);
-        // mark_complete reply for the case stream
-        $this->reply($serverSock, $caseStreamId, 1, ['result' => null]);
         $this->serverRequest($serverSock, $testStreamId, 2, [
             'event' => 'test_done',
             'results' => [

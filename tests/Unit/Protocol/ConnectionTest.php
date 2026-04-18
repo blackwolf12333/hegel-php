@@ -6,8 +6,8 @@ namespace Hegel\Tests\Unit\Protocol;
 
 use Hegel\Codec\CborCodec;
 use Hegel\Exception\ConnectionException;
+use Hegel\Exception\ProtocolException;
 use Hegel\Protocol\Connection;
-use Hegel\Protocol\Stream;
 use Hegel\Wire\Packet;
 use Hegel\Wire\PacketReader;
 use Hegel\Wire\PacketWriter;
@@ -27,7 +27,7 @@ final class ConnectionTest extends TestCase
     }
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      */
     #[Test]
@@ -92,7 +92,7 @@ final class ConnectionTest extends TestCase
     }
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      * @throws \InvalidArgumentException
      */
@@ -131,7 +131,7 @@ final class ConnectionTest extends TestCase
     }
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     #[Test]
@@ -164,7 +164,7 @@ final class ConnectionTest extends TestCase
     }
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      * @throws \InvalidArgumentException
      */
@@ -258,7 +258,7 @@ final class ConnectionTest extends TestCase
 
     /**
      * @throws \PHPUnit\Framework\ExpectationFailedException
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     #[Test]
@@ -296,6 +296,7 @@ final class ConnectionTest extends TestCase
     /**
      * @throws \PHPUnit\Framework\ExpectationFailedException
      * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ProtocolException
      */
     #[Test]
     public function packet_for_stream_zero_is_dispatched_to_control_stream(): void
@@ -326,23 +327,10 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
-    // --- Mutant 64: sendRawReply is public ---
-
-    /**
-     * @throws \PHPUnit\Framework\ExpectationFailedException
-     * @throws \ReflectionException
-     */
-    #[Test]
-    public function send_raw_reply_is_publicly_accessible(): void
-    {
-        $reflection = new \ReflectionMethod(Stream::class, 'sendRawReply');
-        $this->assertTrue($reflection->isPublic(), 'sendRawReply must be public');
-    }
-
     // --- Mutant 65: receiveRawReply && -> || (non-reply packet before correct reply) ---
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      */
     #[Test]
@@ -389,6 +377,7 @@ final class ConnectionTest extends TestCase
 
     /**
      * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ProtocolException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      * @throws \InvalidArgumentException
      */
@@ -445,7 +434,7 @@ final class ConnectionTest extends TestCase
     // --- Mutant 66: bufferPacket return removal for replies ---
 
     /**
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      */
     #[Test]
@@ -510,50 +499,67 @@ final class ConnectionTest extends TestCase
         fclose($serverSock);
     }
 
-    // --- Mutant 68: unregisterStream removal from close() ---
+    // --- Mutant: unregisterStream removal from close() ---
 
     /**
+     * @throws \Hegel\Exception\ProtocolException
      * @throws \Hegel\Exception\ConnectionException
      * @throws \PHPUnit\Framework\ExpectationFailedException
      */
     #[Test]
-    public function close_unregisters_stream_so_subsequent_packets_are_dropped(): void
+    public function close_unregisters_stream_so_dispatch_throws_for_closed_stream(): void
     {
         [$clientSock, $serverSock] = $this->createSocketPair();
         $conn = Connection::fromRawStreams($clientSock, $clientSock);
 
-        $streamA = $conn->newStream();
-        $streamB = $conn->newStream();
+        $stream = $conn->newStream();
+        $streamId = $stream->streamId();
 
-        // Close streamA
-        $streamA->close();
+        $stream->close();
 
         // Drain the close packet from server side
         PacketReader::read($serverSock);
 
-        // Send a request on streamB and receive it; send a packet for streamA first
-        $msgB = $streamB->sendRawRequest('req-b');
-        PacketReader::read($serverSock);
+        // Dispatching a packet for the closed (unregistered) stream must throw.
+        // If unregisterStream was not called (mutant), it would be silently buffered instead.
+        $this->expectException(ProtocolException::class);
+        $this->expectExceptionMessage("closed stream {$streamId}");
 
-        // Server sends a packet for the (now closed/unregistered) streamA,
-        // then a reply for streamB
-        PacketWriter::write($serverSock, new Packet(
-            streamId: $streamA->streamId(),
+        $conn->dispatchPacket(new Packet(
+            streamId: $streamId,
             messageId: 1,
             isReply: true,
             payload: 'orphan-payload',
         ));
-        PacketWriter::write($serverSock, new Packet(
-            streamId: $streamB->streamId(),
-            messageId: $msgB,
-            isReply: true,
-            payload: 'reply-b',
+
+        fclose($clientSock);
+        fclose($serverSock);
+    }
+
+    /**
+     * @throws \PHPUnit\Framework\ExpectationFailedException
+     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ProtocolException
+     * @throws \InvalidArgumentException
+     */
+    #[Test]
+    public function dispatch_buffers_packets_for_not_yet_connected_streams(): void
+    {
+        [$clientSock, $serverSock] = $this->createSocketPair();
+        $conn = Connection::fromRawStreams($clientSock, $clientSock);
+
+        // Dispatch a packet for stream 4 before it's connected
+        $conn->dispatchPacket(new Packet(
+            streamId: 4,
+            messageId: 1,
+            isReply: false,
+            payload: CborCodec::encode(['event' => 'test_case']),
         ));
 
-        // Without unregisterStream the orphan packet would be buffered into streamA,
-        // but receiving on streamB must succeed anyway.
-        $replyB = $streamB->receiveRawReply($msgB);
-        $this->assertSame('reply-b', $replyB);
+        // Now connect the stream — pending packets should be flushed
+        $stream = $conn->connectStream(4);
+        $received = $stream->receiveRequest();
+        $this->assertSame(1, $received[0]);
 
         fclose($clientSock);
         fclose($serverSock);

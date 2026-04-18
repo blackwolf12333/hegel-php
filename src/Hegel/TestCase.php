@@ -7,6 +7,7 @@ namespace Hegel;
 use Hegel\Exception\AssumeRejectedException;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
+use Hegel\Exception\ProtocolException;
 use Hegel\Exception\ServerErrorType;
 use Hegel\Generator\Generator;
 use Hegel\Protocol\Command\GenerateCommand;
@@ -30,7 +31,7 @@ final class TestCase
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws DataExhaustedException
      * @throws \InvalidArgumentException
      */
@@ -57,7 +58,7 @@ final class TestCase
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function target(float $value, string $label): void
@@ -70,7 +71,7 @@ final class TestCase
      *
      * @param array<string, mixed> $schema
      * @throws DataExhaustedException
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function generateFromSchema(array $schema): mixed
@@ -86,7 +87,7 @@ final class TestCase
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function startSpan(int $label): void
@@ -95,7 +96,7 @@ final class TestCase
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function stopSpan(): void
@@ -104,7 +105,7 @@ final class TestCase
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function discardSpan(): void
@@ -113,7 +114,7 @@ final class TestCase
     }
 
     /**
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function newCollection(int $minSize, null|int $maxSize): Collection

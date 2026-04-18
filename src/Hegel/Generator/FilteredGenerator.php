@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace Hegel\Generator;
 
 use Hegel\Exception\AssumeRejectedException;
+use Hegel\Exception\ConnectionException;
+use Hegel\Exception\DataExhaustedException;
+use Hegel\Exception\ProtocolException;
 use Hegel\SpanLabel;
 use Hegel\TestCase;
 
@@ -24,8 +27,8 @@ final class FilteredGenerator implements Generator
 
     /**
      * @throws AssumeRejectedException
-     * @throws \Hegel\Exception\ConnectionException
-     * @throws \Hegel\Exception\DataExhaustedException
+     * @throws ConnectionException|ProtocolException
+     * @throws DataExhaustedException
      * @throws \InvalidArgumentException
      */
     #[\Override]

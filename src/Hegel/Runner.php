@@ -7,6 +7,7 @@ namespace Hegel;
 use Hegel\Exception\AssumeRejectedException;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
+use Hegel\Exception\ProtocolException;
 use Hegel\Protocol\Command\MarkCompleteCommand;
 use Hegel\Protocol\Command\RunTestCommand;
 use Hegel\Protocol\Connection;
@@ -28,7 +29,7 @@ final class Runner
      * @param int|null $seed Random seed
      * @param list<string> $suppressHealthCheck Health checks to suppress
      * @return RunResult
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     public function run(
@@ -97,6 +98,7 @@ final class Runner
     /**
      * @param list<\Throwable> $finalErrors
      * @throws \InvalidArgumentException
+     * @throws ProtocolException
      */
     private function handleTestCase(
         TestCaseEvent $event,
@@ -119,7 +121,7 @@ final class Runner
 
     /**
      * @param list<\Throwable> $finalErrors
-     * @throws ConnectionException
+     * @throws ConnectionException|ProtocolException
      * @throws \InvalidArgumentException
      */
     private function handleReplayCases(
@@ -157,6 +159,7 @@ final class Runner
      *
      * @return \Throwable|null The error if the test case failed.
      * @throws \InvalidArgumentException
+     * @throws ProtocolException
      */
     private function runTestCase(
         int $caseStreamId,

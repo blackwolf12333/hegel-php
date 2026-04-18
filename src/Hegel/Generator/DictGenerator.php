@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hegel\Generator;
 
+use Hegel\Exception\ProtocolException;
 use Hegel\TestCase;
 
 /**
@@ -54,7 +55,7 @@ final class DictGenerator implements Generator
 
     /**
      * @return array<string|int, mixed>
-     * @throws \Hegel\Exception\ConnectionException
+     * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \Hegel\Exception\DataExhaustedException
      * @throws \InvalidArgumentException
      */
