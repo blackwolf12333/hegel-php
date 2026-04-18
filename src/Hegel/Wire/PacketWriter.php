@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Hegel\Wire;
 
+use Hegel\Exception\ConnectionException;
+
 final class PacketWriter
 {
     /**
@@ -32,7 +34,13 @@ final class PacketWriter
         // Patch checksum into header
         $header = substr($header, 0, 4) . pack('N', $checksum) . substr($header, 8);
 
-        fwrite($stream, $header . $packet->payload . chr(Packet::TERMINATOR));
-        fflush($stream);
+        $result = fwrite($stream, $header . $packet->payload . chr(Packet::TERMINATOR));
+        if ($result === false){
+            throw new ConnectionException('Failed to write to server connection');
+        }
+        $result = fflush($stream);
+        if ($result === false){
+            throw new ConnectionException('Failed to write to server connection');
+        }
     }
 }
