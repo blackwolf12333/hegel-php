@@ -73,34 +73,24 @@ final class Generators
 
     /**
      * @template T
-     * @param list<T> $values
+     * @param array<int, T> $values
      * @return BasicGenerator<T>
      * @throws \InvalidArgumentException
      */
     public static function sampledFrom(array $values): BasicGenerator
     {
+        // This is implemented as an integer generator that generates an index which we map back
+        // to a value in the input array because the values could be arbitrary PHP values that we can't
+        // send to the server.
+
         if ($values === []) {
             throw new \InvalidArgumentException('sampledFrom requires at least one value');
         }
-        $transform = self::makeSampledFromTransform($values);
         return new BasicGenerator(
             schema: ['type' => 'integer', 'min_value' => 0, 'max_value' => count($values) - 1],
-            transform: $transform,
+            transform: static fn(int $index) => $values[$index],
             spanLabel: SpanLabel::SampledFrom,
         );
-    }
-
-    /**
-     * @template T
-     * @param array<int, T> $indexed
-     * @return \Closure(int): T
-     */
-    private static function makeSampledFromTransform(array $indexed): \Closure
-    {
-        return static function (mixed $index) use ($indexed): mixed {
-            assert(is_int($index), 'sampledFrom index must be an integer');
-            return $indexed[$index];
-        };
     }
 
     /**
