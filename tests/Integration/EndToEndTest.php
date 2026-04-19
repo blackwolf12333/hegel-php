@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Hegel\Tests\Integration;
 
+use Hegel\Generator\Generator;
 use Hegel\Generator\Generators as gen;
 use Hegel\PHPUnit\HegelTrait;
 use Hegel\PHPUnit\Property;
@@ -229,5 +230,39 @@ final class EndToEndTest extends TestCase
 
         $this->assertNotContains('b', $keys, 'Keys should never contain filtered value (\'b\'): '. print_r($keys, true));
         $this->assertNotContains(2, $values, 'Keys should never contain filtered value (\'2\'): '. print_r($values, true));
+    }
+
+    #[Test]
+    public function optional_returns_both_nulls_and_value(): void
+    {
+        $this->findAny(
+            gen::optional(gen::integers()),
+            static fn($val) => is_int($val)
+        );
+        $this->findAny(
+            gen::optional(gen::integers()),
+            static fn($val) => is_null($val)
+        );
+    }
+
+    private function findAny(Generator $generator, \Closure $predicate): void {
+        $runner = new Runner(Session::global()->connection());
+        $result = $runner->run(
+            static function(TC $tc) use ($predicate, $generator) {
+                if ($predicate($tc->draw($generator))) {
+                    throw new \Exception("HEGEL_FOUND");
+                }
+            },
+            10
+        );
+
+        $throwable = current($result->finalErrors);
+        if ($throwable !== false && $throwable->getMessage() === 'HEGEL_FOUND') {
+            $this->assertTrue(true);
+
+            return;
+        }
+
+        $this->assertTrue(false, "Could not find any examples satisfying the condition after 10 attempts");
     }
 }

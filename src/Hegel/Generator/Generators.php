@@ -181,27 +181,10 @@ final class Generators
             schema: [
                 'type' => 'one_of',
                 'generators' => [
-                    [
-                        'type' => 'tuple',
-                        'elements' => [
-                            ['type' => 'constant', 'value' => 0],
-                            ['type' => 'null'],
-                        ],
-                    ],
-                    [
-                        'type' => 'tuple',
-                        'elements' => [
-                            ['type' => 'constant', 'value' => 1],
-                            $element->schema(),
-                        ],
-                    ],
+                    $element->schema(),
+                    ['type' => 'null'],
                 ],
             ],
-            transform: static function (mixed $result): mixed {
-                assert(is_array($result) && array_key_exists(0, $result) && array_key_exists(1, $result), 'optional result must be an array with indices 0 and 1');
-                return $result[0] === 0 ? null : $result[1];
-            },
-            spanLabel: SpanLabel::Optional,
         );
     }
 
