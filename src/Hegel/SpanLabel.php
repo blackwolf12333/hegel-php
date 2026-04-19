@@ -7,11 +7,8 @@ namespace Hegel;
 enum SpanLabel: int
 {
     case List_ = 1;
-    case ListElement = 2;
     case Set = 3;
-    case SetElement = 4;
     case Map = 5;
-    case MapEntry = 6;
     case Tuple = 7;
     case OneOf = 8;
     case Optional = 9;
@@ -20,5 +17,4 @@ enum SpanLabel: int
     case Filter = 12;
     case Mapped = 13;
     case SampledFrom = 14;
-    case EnumVariant = 15;
 }
