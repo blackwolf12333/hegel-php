@@ -9,6 +9,9 @@ use Hegel\Exception\ProtocolException;
 use Hegel\Wire\Packet;
 use Hegel\Wire\PacketReader;
 use Hegel\Wire\PacketWriter;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
+use Psr\Log\InvalidArgumentException;
 
 final class Connection
 {
@@ -33,6 +36,7 @@ final class Connection
     private function __construct(
         private mixed $reader,
         private mixed $writer,
+        private ?Logger $logger,
     ) {
         $this->controlStream = new Stream(0, $this);
         $this->streams[0] = $this->controlStream;
@@ -43,11 +47,16 @@ final class Connection
      *
      * @param resource $reader Stream resource to read packets from
      * @param resource $writer Stream resource to write packets to
-     * @throws ConnectionException|ProtocolException
+     * @throws ConnectionException|ProtocolException|\InvalidArgumentException
      */
     public static function fromStreams(mixed $reader, mixed $writer): self
     {
-        $conn = new self($reader, $writer);
+        $logger = null;
+        if (getenv('HEGEL_PHP_DEBUG_CONNECTION')) {
+            $logger = new Logger('connection');
+            $logger->pushHandler(new StreamHandler('connection.log'));
+        }
+        $conn = new self($reader, $writer, $logger);
         $conn->performHandshake();
         return $conn;
     }
@@ -60,7 +69,7 @@ final class Connection
      */
     public static function fromRawStreams(mixed $reader, mixed $writer): self
     {
-        return new self($reader, $writer);
+        return new self($reader, $writer, null);
     }
 
     public function controlStream(): Stream
@@ -110,6 +119,7 @@ final class Connection
      */
     public function sendPacket(Packet $packet): void
     {
+        $this->logger?->info($packet->debugStreamRepresentation());
         PacketWriter::write($this->writer, $packet);
     }
 
@@ -120,7 +130,9 @@ final class Connection
      */
     public function readPacket(): null|Packet
     {
-        return PacketReader::read($this->reader);
+        $packet = PacketReader::read($this->reader);
+        $this->logger?->info($packet === null ? 'Empty packet' : $packet->debugStreamRepresentation());
+        return $packet;
     }
 
     /**

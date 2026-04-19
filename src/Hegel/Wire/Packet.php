@@ -38,4 +38,9 @@ final readonly class Packet
             && !$this->isReply
         );
     }
+
+    public function debugStreamRepresentation(): string {
+        $directionIndicator = $this->isReply ? '|<' : '>|';
+        return str_pad($this->messageId . ($this->isReply ? 'R' : ''), 4) . "{$directionIndicator}  [" . str_pad($this->streamId.'', 3, pad_type: STR_PAD_LEFT) . ']-- ' . str_pad($this->payload, 100, '-');
+    }
 }
