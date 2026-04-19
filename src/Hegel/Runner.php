@@ -110,7 +110,9 @@ final class Runner
     ): void {
         $phase = $event->isFinal ? TestPhase::Final : TestPhase::Exploration;
 
-        $testStream->sendReply($msgId, ['result' => null]);
+        // Ack the test_case event BEFORE running the test (prevents deadlock according to hegel-rust)
+        // sendReply already wraps the data `['result' => $data]` for it to become a correct packet payload
+        $testStream->sendReply($msgId, null);
 
         $error = $this->runTestCase($event->streamId, $testFn, $phase, $noteFn);
 

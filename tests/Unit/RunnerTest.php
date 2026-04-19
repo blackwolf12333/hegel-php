@@ -562,14 +562,10 @@ final class RunnerTest extends TestCase
         // The first reply on testStreamId should be the test_case ack
         $this->assertNotEmpty($testStreamReplies, 'Expected a reply for test_case on the test stream');
 
-        // Stream::sendReply() wraps the value in {"result": value}, so the wire payload is
-        // {"result": {"result": null}}. Decoding gives the outer map.
-        /** @var array{result: array{result: null}} $decoded */
+        /** @var array{result: null} $decoded */
         $decoded = CborCodec::decode($testStreamReplies[0]->payload);
         $this->assertArrayHasKey('result', $decoded, 'outer CBOR wrapper must have result key');
-        $inner = $decoded['result'];
-        $this->assertArrayHasKey('result', $inner, 'test_case ack must contain result key');
-        $this->assertNull($inner['result'], 'test_case ack result must be null');
+        $this->assertNull($decoded['result'], 'test_case ack result must be null');
 
         fclose($serverSock);
     }
