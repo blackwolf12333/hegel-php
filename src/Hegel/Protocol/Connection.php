@@ -116,6 +116,8 @@ final class Connection
 
     /**
      * Send a packet through the writer.
+     *
+     * @throws ConnectionException
      */
     public function sendPacket(Packet $packet): void
     {

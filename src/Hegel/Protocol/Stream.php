@@ -35,6 +35,8 @@ final class Stream
     /**
      * Send a raw (non-CBOR) request payload.
      * @return int The message ID assigned to this request.
+     *
+     * @throws ConnectionException
      */
     public function sendRawRequest(string $payload): int
     {
@@ -52,6 +54,8 @@ final class Stream
     /**
      * Send a CBOR-encoded request.
      * @return int The message ID assigned to this request.
+     *
+     * @throws ConnectionException
      */
     public function sendRequest(mixed $data): int
     {
@@ -62,6 +66,8 @@ final class Stream
 
     /**
      * Send a raw reply for a given message ID.
+     *
+     * @throws ConnectionException
      */
     private function sendRawReply(int $messageId, string $payload): void
     {
@@ -77,6 +83,8 @@ final class Stream
     /**
      * Send a CBOR-encoded reply for a given message ID.
      * Wraps the data in {"result": $data} as required by the protocol.
+     *
+     * @throws ConnectionException
      */
     public function sendReply(int $messageId, mixed $data): void
     {
@@ -187,6 +195,10 @@ final class Stream
         $this->requests[] = $packet;
     }
 
+    /**
+     * @return void
+     * @throws ConnectionException
+     */
     public function close(): void
     {
         if ($this->closed) {

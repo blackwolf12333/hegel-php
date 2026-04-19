@@ -10,6 +10,7 @@ final class PacketWriter
 {
     /**
      * @param resource $stream
+     * @throws ConnectionException
      */
     public static function write(mixed $stream, Packet $packet): void
     {
@@ -35,11 +36,11 @@ final class PacketWriter
         $header = substr($header, 0, 4) . pack('N', $checksum) . substr($header, 8);
 
         $result = fwrite($stream, $header . $packet->payload . chr(Packet::TERMINATOR));
-        if ($result === false){
+        if (!$result){
             throw new ConnectionException('Failed to write to server connection');
         }
         $result = fflush($stream);
-        if ($result === false){
+        if (!$result){
             throw new ConnectionException('Failed to write to server connection');
         }
     }

@@ -98,7 +98,7 @@ final class Runner
     /**
      * @param list<\Throwable> $finalErrors
      * @throws \InvalidArgumentException
-     * @throws ProtocolException
+     * @throws ProtocolException|ConnectionException
      */
     private function handleTestCase(
         TestCaseEvent $event,
