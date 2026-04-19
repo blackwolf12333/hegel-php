@@ -50,16 +50,19 @@ final class FilteredGenerator implements Generator
     {
         $testCase->startSpan(SpanLabel::Filter);
 
-        for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
-            /** @var mixed $drawn */
-            $drawn = $this->inner->draw($testCase);
-            if (($this->predicate)($drawn)) {
-                $testCase->stopSpan();
-                return $drawn;
+        try {
+            for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
+                /** @var mixed $drawn */
+                $drawn = $this->inner->draw($testCase);
+                if (($this->predicate)($drawn)) {
+                    $testCase->stopSpan();
+                    return $drawn;
+                }
             }
+        } finally {
+            $testCase->discardSpan();
+            // @mago-expect lint:no-unsafe-finally
+            throw new AssumeRejectedException(sprintf('Filter rejected %d consecutive attempts', self::MAX_ATTEMPTS));
         }
-
-        $testCase->discardSpan();
-        throw new AssumeRejectedException(sprintf('Filter rejected %d consecutive attempts', self::MAX_ATTEMPTS));
     }
 }
