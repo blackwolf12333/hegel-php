@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Hegel\Generator;
 
-use Hegel\Generator\Composite\ListGenerator;
-use Hegel\Generator\Composite\TupleGenerator;
+use Hegel\Generator\Combination\DictGenerator;
+use Hegel\Generator\Combination\ListGenerator;
+use Hegel\Generator\Combination\TupleGenerator;
 use Hegel\SpanLabel;
 
 final class Generators

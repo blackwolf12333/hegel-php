@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Hegel\Generator\Composite;
+namespace Hegel\Generator\Combination;
 
 use Hegel\Exception\ProtocolException;
 use Hegel\Generator\Generator;

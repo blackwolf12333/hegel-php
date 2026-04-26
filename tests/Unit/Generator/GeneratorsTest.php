@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Hegel\Tests\Unit\Generator;
 
 use Hegel\Generator\BasicGenerator;
-use Hegel\Generator\Composite\ListGenerator;
-use Hegel\Generator\DictGenerator;
+use Hegel\Generator\Combination\DictGenerator;
+use Hegel\Generator\Combination\ListGenerator;
 use Hegel\Generator\FilteredGenerator;
 use Hegel\Generator\FlatMappedGenerator;
 use Hegel\Generator\FloatGenerator;
