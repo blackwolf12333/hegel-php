@@ -163,8 +163,7 @@ final class Generators
         return new BasicGenerator(
             schema: ['type' => 'one_of', 'generators' => $branches],
             transform: static function (mixed $result): mixed {
-                assert(is_array($result) && array_key_exists(1, $result), 'oneOf result must be an array with index 1');
-                return $result[1];
+                return $result;
             },
             spanLabel: SpanLabel::OneOf,
         );
