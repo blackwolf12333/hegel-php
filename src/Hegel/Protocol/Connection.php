@@ -11,7 +11,6 @@ use Hegel\Wire\PacketReader;
 use Hegel\Wire\PacketWriter;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Psr\Log\InvalidArgumentException;
 
 final class Connection
 {
@@ -22,7 +21,7 @@ final class Connection
     private array $streams = [];
 
     /** @var array<int, list<Packet>> Packets for streams not yet connected */
-    private array $pendingPackets = [];
+    private array $streamInboxes = [];
 
     /** @var array<int, true> Stream IDs that were explicitly closed */
     private array $closedStreams = [];
@@ -56,6 +55,11 @@ final class Connection
             $logger = new Logger('connection');
             $logger->pushHandler(new StreamHandler('connection.log'));
         }
+
+        stream_set_blocking($reader, false);
+        stream_set_timeout($reader, 10);
+        stream_set_timeout($writer, 10);
+
         $conn = new self($reader, $writer, $logger);
         $conn->performHandshake();
         return $conn;
@@ -98,11 +102,11 @@ final class Connection
         $stream = new Stream($streamId, $this);
         $this->streams[$streamId] = $stream;
 
-        if (array_key_exists($streamId, $this->pendingPackets)) {
-            foreach ($this->pendingPackets[$streamId] as $packet) {
+        if (array_key_exists($streamId, $this->streamInboxes)) {
+            foreach ($this->streamInboxes[$streamId] as $packet) {
                 $stream->bufferPacket($packet);
             }
-            unset($this->pendingPackets[$streamId]);
+            unset($this->streamInboxes[$streamId]);
         }
 
         return $stream;
@@ -156,7 +160,7 @@ final class Connection
         }
 
         // Buffer packets for streams that haven't been connected yet
-        $this->pendingPackets[$packet->streamId][] = $packet;
+        $this->streamInboxes[$packet->streamId][] = $packet;
     }
 
     /**

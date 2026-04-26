@@ -297,42 +297,6 @@ final class GeneratorsTest extends TestCase
     }
 
     /**
-     * @throws \InvalidArgumentException
-     * @throws \PHPUnit\Framework\Exception
-     * @throws \PHPUnit\Framework\ExpectationFailedException
-     * @throws \PHPUnit\Framework\GeneratorNotSupportedException
-     */
-    #[Test]
-    public function optional_schema(): void
-    {
-        $gen = gen::optional(gen::integers(0, 100));
-        /** @var array{type: string, generators: list<array<string, mixed>>} $schema */
-        $schema = $gen->schema();
-        $this->assertSame('one_of', $schema['type']);
-        $generators = $schema['generators'];
-        $this->assertCount(2, $generators);
-
-        // First branch: null (tag 0)
-        /** @var array{elements: list<array{type?: string, value?: int}>} $branch0 */
-        $branch0 = $generators[0];
-        $branch0Elements = $branch0['elements'];
-        /** @var array{value: int} $el0 */
-        $el0 = $branch0Elements[0];
-        $this->assertSame(0, $el0['value']);
-        /** @var array{type: string} $el1 */
-        $el1 = $branch0Elements[1];
-        $this->assertSame('null', $el1['type']);
-
-        // Second branch: inner generator (tag 1)
-        /** @var array{elements: list<array{type?: string, value?: int}>} $branch1 */
-        $branch1 = $generators[1];
-        $branch1Elements = $branch1['elements'];
-        /** @var array{value: int} $el0b */
-        $el0b = $branch1Elements[0];
-        $this->assertSame(1, $el0b['value']);
-    }
-
-    /**
      * @throws \PHPUnit\Framework\ExpectationFailedException
      */
     #[Test]

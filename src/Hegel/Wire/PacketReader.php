@@ -86,14 +86,36 @@ final class PacketReader
         $data = '';
         $remaining = $length;
 
+        $start = microtime(true);
         while ($remaining > 0) {
             $chunk = fread($stream, $remaining);
-            if (!$chunk) {
-                if ($data === '') {
-                    return null; // Clean EOF
+            if ($chunk === false) {
+                $metadata = stream_get_meta_data($stream);
+                if ($metadata['eof']) {
+                    return null;
                 }
-                throw new ConnectionException(sprintf('Unexpected EOF: read %d of %d bytes', strlen($data), $length));
+                if ($metadata['timed_out']) {
+                    throw new ConnectionException('Stream timed out, this usually indicates a bug in the protocol handling. Please report this');
+                }
+                throw new ConnectionException(json_encode($metadata));
             }
+
+            // EOF
+            if (strlen($chunk) === 0 && $data === '') {
+                $metadata = stream_get_meta_data($stream);
+                if ($metadata['eof']) {
+                    return null;
+                }
+
+                $end = microtime(true);
+                if ($end - $start > 10) {
+                    throw new ConnectionException("Stream timed out, this usually indicates a bug in the protocol handling. Please report this");
+                }
+
+                // Sleep for 100 microseconds to see if in the next iteration we got a reply
+                usleep(100);
+            }
+
             $data .= $chunk;
             $remaining -= strlen($chunk);
         }

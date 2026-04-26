@@ -163,6 +163,7 @@ final class Stream
      * @throws ConnectionException
      * @throws \Hegel\Exception\ProtocolException
      * @throws \InvalidArgumentException
+     * @throws \Exception
      */
     public function receiveRequest(): array
     {
@@ -172,6 +173,7 @@ final class Stream
         }
 
         while (true) {
+            $this->checkClosed();
             $packet = $this->readNextOwnPacket('request');
 
             if (!$packet->isReply) {
@@ -187,6 +189,7 @@ final class Stream
      */
     public function bufferPacket(Packet $packet): void
     {
+
         if ($packet->isReply) {
             $this->responses[$packet->messageId] = $packet->payload;
             return;
@@ -239,11 +242,32 @@ final class Stream
             }
 
             if ($packet->streamId !== $this->streamId) {
+                $message = CborCodec::decode($packet->payload);
+                if (array_key_exists('error', $message)) {
+                    $type = $message['type'] ?? '';
+
+                    if (
+                        str_contains($type, 'overflow')
+                        || str_contains($type, 'StopTest')
+                        || str_contains($message['error'], 'StopTest')
+                        || str_contains($message['error'], 'StopTest')
+                    ) {
+                        $this->close();
+                        throw new StopTestException();
+                    }
+                }
                 $this->connection->dispatchPacket($packet);
                 continue;
             }
 
             return $packet;
+        }
+    }
+
+    private function checkClosed()
+    {
+        if ($this->closed) {
+            throw new ConnectionException("Stream is closed");
         }
     }
 }

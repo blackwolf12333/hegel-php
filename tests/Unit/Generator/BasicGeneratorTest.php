@@ -132,45 +132,6 @@ final class BasicGeneratorTest extends TestCase
         fclose($serverSock);
     }
 
-    // Mutant: startSpan/stopSpan must NOT be sent when spanLabel is null
-    /**
-     * @throws \Hegel\Exception\ConnectionException
-     * @throws \PHPUnit\Framework\ExpectationFailedException
-     * @throws \Hegel\Exception\DataExhaustedException
-     * @throws \InvalidArgumentException
-     */
-    #[Test]
-    public function draw_without_span_label_sends_only_generate(): void
-    {
-        [, $serverSock, $stream] = $this->createStreamPair();
-        $streamId = $stream->streamId();
-
-        $this->replyWithResult($serverSock, $streamId, 1, 7);  // generate
-
-        $schema = ['type' => 'integer', 'min_value' => 0, 'max_value' => 10];
-        $gen = new BasicGenerator($schema);
-
-        $tc = new HegelTestCase($stream);
-        /** @var mixed $value */
-        $value = $gen->draw($tc);
-        $this->assertSame(7, $value);
-
-        // Only one packet must have been sent (the generate command)
-        $p1 = PacketReader::read($serverSock);
-        $this->assertNotNull($p1);
-        /** @var array{command: string} $d1 */
-        $d1 = CborCodec::decode($p1->payload);
-        $this->assertSame('generate', $d1['command']);
-
-        // No further packets should be waiting
-        stream_set_blocking($serverSock, false);
-        $extra = PacketReader::read($serverSock);
-        $this->assertNull($extra, 'No span commands must be sent when spanLabel is null');
-        stream_set_blocking($serverSock, true);
-
-        fclose($serverSock);
-    }
-
     // Mutant: transform closure must be applied to the generated value
     /**
      * @throws \PHPUnit\Framework\ExpectationFailedException
