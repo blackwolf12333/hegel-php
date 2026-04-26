@@ -31,7 +31,7 @@ final class FlatMappedGenerator implements Generator
     ) {}
 
     #[\Override]
-    public function schema(): ?array
+    public function asBasic(): ?array
     {
         return null;
     }

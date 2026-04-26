@@ -28,7 +28,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::integers(0, 100);
         $this->assertInstanceOf(BasicGenerator::class, $gen);
-        $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 100], $gen->schema());
+        $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 100], $gen->asBasic());
     }
 
     /**
@@ -51,7 +51,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::floats();
         $this->assertInstanceOf(FloatGenerator::class, $gen);
-        $this->assertSame(['type' => 'float'], $gen->schema());
+        $this->assertSame(['type' => 'float'], $gen->asBasic());
     }
 
     /**
@@ -62,7 +62,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::floats()->min(0.0)->max(1.0);
         /** @var array{type: string, min_value: float, max_value: float} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('float', $schema['type']);
         $this->assertSame(0.0, $schema['min_value']);
         $this->assertSame(1.0, $schema['max_value']);
@@ -76,7 +76,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::floats()->allowNaN();
         /** @var array{allow_nan: bool} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertTrue($schema['allow_nan']);
     }
 
@@ -88,7 +88,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::floats()->min(0.0)->excludeMin();
         /** @var array{exclude_min: bool} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertTrue($schema['exclude_min']);
     }
 
@@ -99,7 +99,7 @@ final class GeneratorsTest extends TestCase
     public function booleans_schema(): void
     {
         $gen = gen::booleans();
-        $this->assertSame(['type' => 'boolean'], $gen->schema());
+        $this->assertSame(['type' => 'boolean'], $gen->asBasic());
     }
 
     /**
@@ -110,7 +110,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::text(5, 20);
         /** @var array{type: string, min_size: int, max_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('string', $schema['type']);
         $this->assertSame(5, $schema['min_size']);
         $this->assertSame(20, $schema['max_size']);
@@ -125,7 +125,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::text(0);
         /** @var array{type: string, min_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('string', $schema['type']);
         $this->assertSame(0, $schema['min_size']);
         $this->assertArrayNotHasKey('max_size', $schema);
@@ -139,7 +139,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::binary(0, 256);
         /** @var array{type: string, min_size: int, max_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('binary', $schema['type']);
         $this->assertSame(0, $schema['min_size']);
         $this->assertSame(256, $schema['max_size']);
@@ -152,7 +152,7 @@ final class GeneratorsTest extends TestCase
     public function just_schema(): void
     {
         $gen = gen::just(null);
-        $this->assertSame(['type' => 'constant', 'value' => null], $gen->schema());
+        $this->assertSame(['type' => 'constant', 'value' => null], $gen->asBasic());
     }
 
     /**
@@ -163,7 +163,7 @@ final class GeneratorsTest extends TestCase
     public function sampled_from_schema(): void
     {
         $gen = gen::sampledFrom(['a', 'b', 'c']);
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         // SampledFrom is implemented as a transform with spans
         $this->assertNull( $schema);
     }
@@ -186,7 +186,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::fromRegex('[a-z]+');
         /** @var array{type: string, pattern: string, fullmatch: bool} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('regex', $schema['type']);
         $this->assertSame('[a-z]+', $schema['pattern']);
         $this->assertTrue($schema['fullmatch']);
@@ -204,7 +204,7 @@ final class GeneratorsTest extends TestCase
         $gen = gen::lists(gen::integers(0, 10));
         $this->assertInstanceOf(ListGenerator::class, $gen);
         /** @var array{type: string, elements: array<string, mixed>} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('list', $schema['type']);
         $elements = $schema['elements'];
         $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 10], $elements);
@@ -219,7 +219,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::lists(gen::integers(0, 10))->minSize(1)->maxSize(5);
         /** @var array{min_size: int, max_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(1, $schema['min_size']);
         $this->assertSame(5, $schema['max_size']);
     }
@@ -246,7 +246,7 @@ final class GeneratorsTest extends TestCase
         $gen = gen::dicts(gen::text(), gen::integers(0, 100));
         $this->assertInstanceOf(DictGenerator::class, $gen);
         /** @var array{type: string, keys: array<string, mixed>, values: array<string, mixed>} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('dict', $schema['type']);
         $this->assertSame(['type' => 'string', 'min_size' => 0], $schema['keys']);
         $this->assertSame(['type' => 'integer', 'min_value' => 0, 'max_value' => 100], $schema['values']);
@@ -263,7 +263,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::tuples(gen::integers(0, 10), gen::booleans());
         /** @var array{type: string, elements: list<array<string, mixed>>} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('tuple', $schema['type']);
         $elements = $schema['elements'];
         $this->assertCount(2, $elements);
@@ -281,7 +281,7 @@ final class GeneratorsTest extends TestCase
     public function one_of_schema(): void
     {
         $gen = gen::oneOf(gen::integers(0, 10), gen::booleans());
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         // oneOf is implemented as a transform with spans
         $this->assertNull($schema);
     }
@@ -339,7 +339,7 @@ final class GeneratorsTest extends TestCase
     public function emails_schema(): void
     {
         $gen = gen::emails();
-        $this->assertSame(['type' => 'email'], $gen->schema());
+        $this->assertSame(['type' => 'email'], $gen->asBasic());
     }
 
     /**
@@ -349,7 +349,7 @@ final class GeneratorsTest extends TestCase
     public function urls_schema(): void
     {
         $gen = gen::urls();
-        $this->assertSame(['type' => 'url'], $gen->schema());
+        $this->assertSame(['type' => 'url'], $gen->asBasic());
     }
 
     /**
@@ -360,7 +360,7 @@ final class GeneratorsTest extends TestCase
     {
         $gen = gen::domains();
         /** @var array{type: string} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame('domain', $schema['type']);
     }
 
@@ -371,7 +371,7 @@ final class GeneratorsTest extends TestCase
     public function ipv4_schema(): void
     {
         $gen = gen::ipv4();
-        $this->assertSame(['type' => 'ipv4'], $gen->schema());
+        $this->assertSame(['type' => 'ipv4'], $gen->asBasic());
     }
 
     /**
@@ -381,7 +381,7 @@ final class GeneratorsTest extends TestCase
     public function ipv6_schema(): void
     {
         $gen = gen::ipv6();
-        $this->assertSame(['type' => 'ipv6'], $gen->schema());
+        $this->assertSame(['type' => 'ipv6'], $gen->asBasic());
     }
 
     /**
@@ -391,7 +391,7 @@ final class GeneratorsTest extends TestCase
     public function dates_schema(): void
     {
         $gen = gen::dates();
-        $this->assertSame(['type' => 'date'], $gen->schema());
+        $this->assertSame(['type' => 'date'], $gen->asBasic());
     }
 
     /**
@@ -401,7 +401,7 @@ final class GeneratorsTest extends TestCase
     public function datetimes_schema(): void
     {
         $gen = gen::datetimes();
-        $this->assertSame(['type' => 'datetime'], $gen->schema());
+        $this->assertSame(['type' => 'datetime'], $gen->asBasic());
     }
 
     /**

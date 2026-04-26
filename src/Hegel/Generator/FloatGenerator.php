@@ -98,7 +98,7 @@ final class FloatGenerator implements SchemaGenerator
 
     /** @return array<string, mixed> */
     #[\Override]
-    public function schema(): array
+    public function asBasic(): array
     {
         $schema = ['type' => 'float'];
 
@@ -132,6 +132,6 @@ final class FloatGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        return $testCase->generateFromSchema($this->schema());
+        return $testCase->generateFromSchema($this->asBasic());
     }
 }

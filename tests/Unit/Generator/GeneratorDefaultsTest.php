@@ -22,7 +22,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::dicts(gen::text(), gen::integers(0, 100));
         /** @var array{min_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(0, $schema['min_size']);
     }
 
@@ -35,7 +35,7 @@ final class GeneratorDefaultsTest extends TestCase
     public function dicts_schema_excludes_max_size_when_not_set(): void
     {
         $gen = gen::dicts(gen::text(), gen::integers(0, 100));
-        $this->assertArrayNotHasKey('max_size', $gen->schema());
+        $this->assertArrayNotHasKey('max_size', $gen->asBasic());
     }
 
     /**
@@ -48,7 +48,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::dicts(gen::text(), gen::integers(0, 100))->maxSize(10);
         /** @var array{max_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertArrayHasKey('max_size', $schema);
         $this->assertSame(10, $schema['max_size']);
     }
@@ -61,7 +61,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::domains();
         /** @var array{max_length: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(255, $schema['max_length']);
     }
 
@@ -69,7 +69,7 @@ final class GeneratorDefaultsTest extends TestCase
     public function domains_schema_includes_max_length_when_set(): void
     {
         $gen = gen::domains()->maxLength(12);
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(12, $schema['max_length']);
     }
 
@@ -82,9 +82,9 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $original = gen::floats();
         $modified = $original->min(1.0);
-        $this->assertArrayNotHasKey('min_value', $original->schema());
+        $this->assertArrayNotHasKey('min_value', $original->asBasic());
         /** @var array{min_value: float} $modifiedSchema */
-        $modifiedSchema = $modified->schema();
+        $modifiedSchema = $modified->asBasic();
         $this->assertSame(1.0, $modifiedSchema['min_value']);
     }
 
@@ -97,9 +97,9 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $original = gen::floats();
         $modified = $original->max(1.0);
-        $this->assertArrayNotHasKey('max_value', $original->schema());
+        $this->assertArrayNotHasKey('max_value', $original->asBasic());
         /** @var array{max_value: float} $modifiedSchema */
-        $modifiedSchema = $modified->schema();
+        $modifiedSchema = $modified->asBasic();
         $this->assertSame(1.0, $modifiedSchema['max_value']);
     }
 
@@ -112,9 +112,9 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $original = gen::floats();
         $modified = $original->allowNaN();
-        $this->assertArrayNotHasKey('allow_nan', $original->schema());
+        $this->assertArrayNotHasKey('allow_nan', $original->asBasic());
         /** @var array{allow_nan: bool} $modifiedSchema */
-        $modifiedSchema = $modified->schema();
+        $modifiedSchema = $modified->asBasic();
         $this->assertTrue($modifiedSchema['allow_nan']);
     }
 
@@ -127,9 +127,9 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $original = gen::floats()->min(0.0);
         $modified = $original->excludeMin();
-        $this->assertArrayNotHasKey('exclude_min', $original->schema());
+        $this->assertArrayNotHasKey('exclude_min', $original->asBasic());
         /** @var array{exclude_min: bool} $modifiedSchema */
-        $modifiedSchema = $modified->schema();
+        $modifiedSchema = $modified->asBasic();
         $this->assertTrue($modifiedSchema['exclude_min']);
     }
 
@@ -141,7 +141,7 @@ final class GeneratorDefaultsTest extends TestCase
     public function integers_accepts_equal_min_and_max(): void
     {
         $gen = gen::integers(5, 5);
-        $this->assertSame(['type' => 'integer', 'min_value' => 5, 'max_value' => 5], $gen->schema());
+        $this->assertSame(['type' => 'integer', 'min_value' => 5, 'max_value' => 5], $gen->asBasic());
     }
 
     /**
@@ -152,7 +152,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::binary();
         /** @var array{min_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(0, $schema['min_size']);
     }
 
@@ -164,27 +164,17 @@ final class GeneratorDefaultsTest extends TestCase
     public function optional_schema_branch_types(): void
     {
         $gen = gen::optional(gen::integers(0, 100));
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         /** @var array{generators: list<array<string, mixed>>} $schema */
         $generators = $schema['generators'];
 
         /** @var array{type: string, elements: list<array<string, mixed>>} $branch0 */
         $branch0 = $generators[0];
-        $this->assertSame('tuple', $branch0['type']);
-
-        /** @var list<array{type: string}> $branch0Elements */
-        $branch0Elements = $branch0['elements'];
-        $el0 = $branch0Elements[0];
-        $this->assertSame('constant', $el0['type']);
+        $this->assertSame('integer', $branch0['type']);
 
         /** @var array{type: string, elements: list<array<string, mixed>>} $branch1 */
         $branch1 = $generators[1];
-        $this->assertSame('tuple', $branch1['type']);
-
-        /** @var list<array{type: string}> $branch1Elements */
-        $branch1Elements = $branch1['elements'];
-        $el0b = $branch1Elements[0];
-        $this->assertSame('constant', $el0b['type']);
+        $this->assertSame('null', $branch1['type']);
     }
 
     /**
@@ -196,7 +186,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::lists(gen::integers(0, 10));
         /** @var array{min_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(0, $schema['min_size']);
     }
 
@@ -209,7 +199,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::lists(gen::integers(0, 10))->maxSize(5)->minSize(5);
         /** @var array{min_size: int, max_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(5, $schema['min_size']);
         $this->assertSame(5, $schema['max_size']);
     }
@@ -233,7 +223,7 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $gen = gen::lists(gen::integers(0, 10))->minSize(5)->maxSize(5);
         /** @var array{min_size: int, max_size: int} $schema */
-        $schema = $gen->schema();
+        $schema = $gen->asBasic();
         $this->assertSame(5, $schema['min_size']);
         $this->assertSame(5, $schema['max_size']);
     }
@@ -248,9 +238,9 @@ final class GeneratorDefaultsTest extends TestCase
         $original = gen::lists(gen::integers(0, 10));
         $modified = $original->minSize(3);
         /** @var array{min_size: int} $origSchema */
-        $origSchema = $original->schema();
+        $origSchema = $original->asBasic();
         /** @var array{min_size: int} $modSchema */
-        $modSchema = $modified->schema();
+        $modSchema = $modified->asBasic();
         $this->assertSame(0, $origSchema['min_size']);
         $this->assertSame(3, $modSchema['min_size']);
     }
@@ -265,9 +255,9 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $original = gen::lists(gen::integers(0, 10));
         $modified = $original->maxSize(7);
-        $this->assertArrayNotHasKey('max_size', $original->schema());
+        $this->assertArrayNotHasKey('max_size', $original->asBasic());
         /** @var array{max_size: int} $modSchema */
-        $modSchema = $modified->schema();
+        $modSchema = $modified->asBasic();
         $this->assertSame(7, $modSchema['max_size']);
     }
 
@@ -282,9 +272,9 @@ final class GeneratorDefaultsTest extends TestCase
     {
         $original = gen::dicts(gen::text(), gen::integers(0, 100));
         $modified = $original->maxSize(5);
-        $this->assertArrayNotHasKey('max_size', $original->schema());
+        $this->assertArrayNotHasKey('max_size', $original->asBasic());
         /** @var array{max_size: int} $modSchema */
-        $modSchema = $modified->schema();
+        $modSchema = $modified->asBasic();
         $this->assertSame(5, $modSchema['max_size']);
     }
 
@@ -299,9 +289,9 @@ final class GeneratorDefaultsTest extends TestCase
         $original = gen::dicts(gen::text(), gen::integers(0, 100));
         $modified = $original->minSize(3);
         /** @var array{min_size: int} $origSchema */
-        $origSchema = $original->schema();
+        $origSchema = $original->asBasic();
         /** @var array{min_size: int} $modSchema */
-        $modSchema = $modified->schema();
+        $modSchema = $modified->asBasic();
         $this->assertSame(0, $origSchema['min_size']);
         $this->assertSame(3, $modSchema['min_size']);
     }

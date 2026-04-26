@@ -23,7 +23,7 @@ interface Generator
     /**
      * @return array<string, mixed>|null
      */
-    public function schema(): ?array;
+    public function asBasic(): ?array;
 
     /**
      * @template TOut

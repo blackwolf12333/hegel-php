@@ -34,7 +34,7 @@ final class BasicGenerator implements SchemaGenerator
     ) {}
 
     #[\Override]
-    public function schema(): ?array
+    public function asBasic(): ?array
     {
         if ($this->transform !== null) {
             return null;
@@ -83,7 +83,7 @@ final class BasicGenerator implements SchemaGenerator
             return new BasicGenerator(
                 // @mago-expect analyzer:possibly-null-argument
                 // because $this->transform is null this will always have a schema
-                $this->schema(),
+                $this->asBasic(),
                 $fn
             );
         }

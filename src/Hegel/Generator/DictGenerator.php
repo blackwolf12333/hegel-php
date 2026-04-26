@@ -49,14 +49,14 @@ final class DictGenerator implements SchemaGenerator
 
     /** @return array<string, mixed> */
     #[\Override]
-    public function schema(): array
+    public function asBasic(): array
     {
         assert($this->keys instanceof SchemaGenerator, 'Keys generator should be a SchemaGenerator');
         assert($this->values instanceof SchemaGenerator, 'Values generator should be a SchemaGenerator');
         $schema = [
             'type' => 'dict',
-            'keys' => $this->keys->schema(),
-            'values' => $this->values->schema(),
+            'keys' => $this->keys->asBasic(),
+            'values' => $this->values->asBasic(),
             'min_size' => $this->minSize,
         ];
 
@@ -78,7 +78,7 @@ final class DictGenerator implements SchemaGenerator
     {
         if ($this->keys instanceof SchemaGenerator && $this->values instanceof SchemaGenerator) {
             /** @var array<K, V> */
-            return $testCase->generateFromSchema($this->schema());
+            return $testCase->generateFromSchema($this->asBasic());
         }
 
         $testCase->startSpan(SpanLabel::Map);

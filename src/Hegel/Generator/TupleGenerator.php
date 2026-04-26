@@ -37,7 +37,7 @@ class TupleGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $schema = $this->schema();
+        $schema = $this->asBasic();
         if ($schema !== null) {
             /** @var list<T> */
             return $testCase->generateFromSchema($schema);
@@ -59,9 +59,9 @@ class TupleGenerator implements Generator
     }
 
     #[\Override]
-    public function schema(): ?array
+    public function asBasic(): ?array
     {
-        $elementSchemas = array_map(static fn(Generator $elem) => $elem->schema(), $this->elements);
+        $elementSchemas = array_map(static fn(Generator $elem) => $elem->asBasic(), $this->elements);
         if (array_any($elementSchemas, static fn($elem) => $elem === null)) {
             return null;
         }

@@ -35,7 +35,7 @@ final class DomainGenerator implements SchemaGenerator
 
     /** @return array{type: 'domain', max_length: positive-int} */
     #[\Override]
-    public function schema(): array
+    public function asBasic(): array
     {
         return [
             'type' => 'domain',
@@ -51,6 +51,6 @@ final class DomainGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        return $testCase->generateFromSchema($this->schema());
+        return $testCase->generateFromSchema($this->asBasic());
     }
 }

@@ -157,7 +157,7 @@ final class Generators
 
         $branches = [];
         foreach ($generators as $gen) {
-            $branches[] = $gen->schema();
+            $branches[] = $gen->asBasic();
         }
 
         return new BasicGenerator(
@@ -181,7 +181,7 @@ final class Generators
             schema: [
                 'type' => 'one_of',
                 'generators' => [
-                    $element->schema(),
+                    $element->asBasic(),
                     ['type' => 'null'],
                 ],
             ],

@@ -58,13 +58,13 @@ final class ListGenerator implements SchemaGenerator
 
     /** @return array<string, mixed> */
     #[\Override]
-    public function schema(): array
+    public function asBasic(): array
     {
         assert($this->elements instanceof SchemaGenerator, 'Elements generator should be a SchemaGenerator');
 
         $schema = [
             'type' => 'list',
-            'elements' => $this->elements->schema(),
+            'elements' => $this->elements->asBasic(),
             'min_size' => $this->minSize,
         ];
 
@@ -83,8 +83,8 @@ final class ListGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        if ($this->elements->schema() !== null) {
-            return $testCase->generateFromSchema($this->schema());
+        if ($this->elements->asBasic() !== null) {
+            return $testCase->generateFromSchema($this->asBasic());
         }
 
         $testCase->startSpan(SpanLabel::List_);
