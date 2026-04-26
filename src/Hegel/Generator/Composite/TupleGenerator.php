@@ -2,11 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Hegel\Generator;
+namespace Hegel\Generator\Composite;
 
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
 use Hegel\Exception\ProtocolException;
+use Hegel\Generator\Generator as Generator;
+use Hegel\Generator\GeneratorCombinatorsTrait;
 use Hegel\SpanLabel;
 use Hegel\TestCase;
 

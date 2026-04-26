@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Hegel\Tests\Unit\Generator;
 
 use Hegel\Generator\BasicGenerator;
+use Hegel\Generator\Composite\ListGenerator;
 use Hegel\Generator\DictGenerator;
 use Hegel\Generator\FilteredGenerator;
 use Hegel\Generator\FlatMappedGenerator;
 use Hegel\Generator\FloatGenerator;
 use Hegel\Generator\Generators as gen;
-use Hegel\Generator\ListGenerator;
 use Hegel\Generator\MappedGenerator;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
