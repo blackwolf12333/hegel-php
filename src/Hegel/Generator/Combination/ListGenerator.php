@@ -29,8 +29,8 @@ final class ListGenerator extends Generator
      */
     public function __construct(
         private Generator $elements,
-        private int $minSize = 0,
-        private null|int $maxSize = null,
+        public readonly int $minSize = 0,
+        public readonly null|int $maxSize = null,
         private bool $unique = false,
     ) {
         $elementBasic = $this->elements->asBasic();
@@ -66,9 +66,8 @@ final class ListGenerator extends Generator
         if ($this->maxSize !== null && $value > $this->maxSize) {
             throw new \InvalidArgumentException('minSize cannot be greater than maxSize');
         }
-        $new = clone $this;
-        $new->minSize = $value;
-        return $new;
+
+        return new self($this->elements, $value, $this->maxSize, $this->unique);
     }
 
     /**
@@ -79,9 +78,8 @@ final class ListGenerator extends Generator
         if ($value < $this->minSize) {
             throw new \InvalidArgumentException('maxSize cannot be less than minSize');
         }
-        $new = clone $this;
-        $new->maxSize = $value;
-        return $new;
+
+        return new self($this->elements, $this->minSize, $value, $this->unique);
     }
 
     #[\Override]

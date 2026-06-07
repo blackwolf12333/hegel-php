@@ -17,6 +17,40 @@ use PHPUnit\Framework\TestCase;
 
 final class GeneratorsTest extends TestCase
 {
+    #[Test]
+    public function list_generator_max_size_does_not_affect_original(): void {
+        $original = gen::lists(gen::integers(0,10));
+        $maxSize = $original->maxSize(10);
+
+        $this->assertSame(null, $original->maxSize);
+        $this->assertSame(10, $maxSize->maxSize);
+    }
+
+    #[Test]
+    public function list_generator_min_size_does_not_affect_original(): void {
+        $original = gen::lists(gen::integers(0,10));
+        $maxSize = $original->minSize(10);
+
+        $this->assertSame(0, $original->minSize);
+        $this->assertSame(10, $maxSize->minSize);
+    }
+    #[Test]
+    public function dict_generator_max_size_does_not_affect_original(): void {
+        $original = gen::dicts(gen::integers(0,10), gen::integers(0,10));
+        $maxSize = $original->maxSize(10);
+
+        $this->assertSame(null, $original->maxSize);
+        $this->assertSame(10, $maxSize->maxSize);
+    }
+
+    #[Test]
+    public function dict_generator_min_size_does_not_affect_original(): void {
+        $original = gen::dicts(gen::integers(0,10), gen::integers(0,10));
+        $maxSize = $original->minSize(10);
+
+        $this->assertSame(0, $original->minSize);
+        $this->assertSame(10, $maxSize->minSize);
+    }
 
     /**
      * @throws \InvalidArgumentException

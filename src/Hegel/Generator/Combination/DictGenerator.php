@@ -31,8 +31,8 @@ final class DictGenerator extends Generator
     public function __construct(
         private readonly Generator $keys,
         private readonly Generator $values,
-        private int                $minSize = 0,
-        private null|int           $maxSize = null,
+        public readonly int        $minSize = 0,
+        public readonly null|int   $maxSize = null,
     ) {
         $keysBasic = $this->keys->asBasic();
         $valuesBasic = $this->values->asBasic();
@@ -72,16 +72,12 @@ final class DictGenerator extends Generator
 
     public function minSize(int $value): self
     {
-        $new = clone $this;
-        $new->minSize = $value;
-        return $new;
+        return new self($this->keys, $this->values, $value, $this->maxSize);
     }
 
     public function maxSize(int $value): self
     {
-        $new = clone $this;
-        $new->maxSize = $value;
-        return $new;
+        return new self($this->keys, $this->values, $this->minSize, $value);
     }
 
     #[\Override]
