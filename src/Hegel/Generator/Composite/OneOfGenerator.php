@@ -28,21 +28,20 @@ class OneOfGenerator extends Generator {
         $basics = array_map(static fn(Generator $g) => $g->asBasic(), $sources);
 
         if (array_all($basics, static fn($b) => $b !== null)) {
+            $basicsSchemas = array_map(static fn($b) => $b->schema, $basics);
             $this->basic = new BasicGenerator(
                 [
                     'type' => 'one_of',
-                    'elements' => $basics,
+                    'generators' => $basicsSchemas,
                 ],
                 static function(mixed $raw) use ($basics) {
-                    if (!is_array($raw) || count($raw) !== 1) {
-                        throw new \Exception("Expected an array of length 1, got: " . print_r($raw, true));
+                    if (!is_array($raw) || count($raw) !== 2 || !isset($raw[0], $raw[1])) {
+                        throw new \Exception("Expected an array of length 2, got: " . print_r($raw, true));
                     }
 
                     $tag = $raw[0];
 
-                    return (new BasicGenerator(
-                        $basics[$tag],
-                    ));
+                    return $basics[$tag]->parseRaw($raw[1]);
                 }
             );
         } else {

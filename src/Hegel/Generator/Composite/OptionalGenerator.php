@@ -26,20 +26,8 @@ class OptionalGenerator extends Generator
         $innerBasic = $this->inner->asBasic();
 
         if ($innerBasic) {
-            $nullSchema = [
-                'type' => 'tuple',
-                'elements' => [
-                    ['type' => 'constant', 'value' => 0],
-                    ['type' => 'null'],
-                ],
-            ];
-            $valueSchema = [
-                'type' => 'tuple',
-                'elements' => [
-                    ['type' => 'constant', 'value' => 1],
-                    $innerBasic->schema,
-                ],
-            ];
+            $nullSchema = ['type' => 'constant', 'value' => null];
+            $valueSchema = $innerBasic->schema;
 
             $this->basic = new BasicGenerator(
                 [ 'type' => 'one_of', 'generators' => [$nullSchema, $valueSchema]],
