@@ -14,13 +14,10 @@ use Hegel\TestCase;
  * @template TIn
  * @template TOut
  *
- * @template-implements Generator<TOut>
+ * @template-extends  Generator<TOut>
  */
-final class FlatMappedGenerator implements Generator
+final class FlatMappedGenerator extends Generator
 {
-    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<TIn> */
-    use GeneratorCombinatorsTrait;
-
     /**
      * @param Generator<TIn> $inner
      * @param \Closure(TIn): Generator<TOut> $fn
@@ -29,12 +26,6 @@ final class FlatMappedGenerator implements Generator
         private readonly Generator $inner,
         private readonly \Closure $fn,
     ) {}
-
-    #[\Override]
-    public function asBasic(): ?array
-    {
-        return null;
-    }
 
     /**
      * @throws \Hegel\Exception\ConnectionException|ProtocolException
@@ -45,13 +36,9 @@ final class FlatMappedGenerator implements Generator
     public function draw(TestCase $testCase): mixed
     {
         $testCase->startSpan(SpanLabel::FlatMap);
-        try {
-            /** @var mixed $derived */
-            $derived = ($this->fn)($this->inner->draw($testCase));
-            assert($derived instanceof Generator, 'flatMap callback must return a Generator');
-            return $derived->draw($testCase);
-        } finally {
-            $testCase->stopSpan();
-        }
+        $derived = ($this->fn)($this->inner->draw($testCase));
+        $drawn = $derived->draw($testCase);
+        $testCase->stopSpan();
+        return $drawn;
     }
 }

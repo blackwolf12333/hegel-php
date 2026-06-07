@@ -12,13 +12,10 @@ use Hegel\TestCase;
  * @internal
  * @template TIn
  * @template TOut
- * @template-implements Generator<TOut>
+ * @template-extends  Generator<TOut>
  */
-final class MappedGenerator implements Generator
+final class MappedGenerator extends Generator
 {
-    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<TIn> */
-    use GeneratorCombinatorsTrait;
-
     /**
      * @param Generator<TIn> $inner
      * @param \Closure(TIn): TOut $fn
@@ -26,12 +23,19 @@ final class MappedGenerator implements Generator
     public function __construct(
         private readonly Generator $inner,
         private readonly \Closure $fn,
-    ) {}
+    ) {
+    }
 
     #[\Override]
-    public function asBasic(): ?array
+    public function asBasic(): ?BasicGenerator
     {
-        return null;
+        $sourceBasic = $this->inner->asBasic();
+        if (!$sourceBasic) return null;
+
+        return new BasicGenerator(
+            $sourceBasic->schema,
+            static fn(mixed $raw) => ($this->fn)($sourceBasic->parseRaw($raw))
+        );
     }
 
     /**
@@ -42,11 +46,14 @@ final class MappedGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $testCase->startSpan(SpanLabel::Mapped);
-        try {
-            return ($this->fn)($this->inner->draw($testCase));
-        } finally {
-            $testCase->stopSpan();
+        $sourceBasic = $this->inner->asBasic();
+        if ($sourceBasic !== null) {
+            return ($this->fn)($sourceBasic->draw($testCase));
         }
+
+        $testCase->startSpan(SpanLabel::Mapped);
+        $result = ($this->fn)($this->inner->draw($testCase));
+        $testCase->stopSpan();
+        return $result;
     }
 }

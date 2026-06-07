@@ -2,21 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Hegel\Generator;
+namespace Hegel\Generator\Strings;
 
 use Hegel\Exception\ProtocolException;
+use Hegel\Generator\Generator;
 use Hegel\TestCase;
 
 /**
  * @internal
  *
- * @template-implements SchemaGenerator<string>
+ * @template-extends  Generator<string>
  */
-final class DomainGenerator implements SchemaGenerator
+final class DomainGenerator extends Generator
 {
-    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<string> */
-    use GeneratorCombinatorsTrait;
-
     /**
      * @param positive-int $maxLength
      */
@@ -33,16 +31,6 @@ final class DomainGenerator implements SchemaGenerator
         return new self($value);
     }
 
-    /** @return array{type: 'domain', max_length: positive-int} */
-    #[\Override]
-    public function asBasic(): array
-    {
-        return [
-            'type' => 'domain',
-            'max_length' => $this->maxLength,
-        ];
-    }
-
     /**
      * @throws \Hegel\Exception\ConnectionException|ProtocolException
      * @throws \Hegel\Exception\DataExhaustedException
@@ -51,6 +39,9 @@ final class DomainGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        return $testCase->generateFromSchema($this->asBasic());
+        return $testCase->generateFromSchema([
+            'type' => 'domain',
+            'max_length' => $this->maxLength,
+        ]);
     }
 }

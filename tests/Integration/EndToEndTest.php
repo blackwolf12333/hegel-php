@@ -245,6 +245,28 @@ final class EndToEndTest extends TestCase
         );
     }
 
+    #[Test]
+    public function oneOf_returns_either_one_or_the_other() : void {
+        $this->findAny(
+            gen::oneOf(
+                gen::integers(),
+                gen::text(),
+            ),
+            static fn($val) => is_int($val) || is_string($val)
+        );
+    }
+    #[Test]
+    public function oneOf_returns_mapped_list() : void {
+        $this->findAny(
+            gen::oneOf(
+                gen::lists(
+                    gen::integers(),
+                )
+            ),
+            static fn($val) => is_array($val)
+        );
+    }
+
     private function findAny(Generator $generator, \Closure $predicate): void {
         $runner = new Runner(Session::global()->connection());
         $result = $runner->run(

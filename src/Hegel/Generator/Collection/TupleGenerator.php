@@ -7,27 +7,48 @@ namespace Hegel\Generator\Combination;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\DataExhaustedException;
 use Hegel\Exception\ProtocolException;
-use Hegel\Generator\Generator as Generator;
-use Hegel\Generator\GeneratorCombinatorsTrait;
+use Hegel\Generator\BasicGenerator;
+use Hegel\Generator\Generator;
 use Hegel\SpanLabel;
 use Hegel\TestCase;
 
 /**
  * @template T
- * @template-implements Generator<list<T>>
+ * @template-extends Generator<list<T>>
  */
-class TupleGenerator implements Generator
+class TupleGenerator extends Generator
 {
-    /** @use GeneratorCombinatorsTrait<list<T>> */
-    use GeneratorCombinatorsTrait;
+    private ?BasicGenerator $basic = null;
 
     /**
-     * @param Generator $elements
+     * @param Generator[] $elements
      */
     public function __construct(
         private readonly array $elements
     )
     {
+        $basics = array_map(static fn(Generator $g) => $g->asBasic(), $this->elements);
+
+        if (array_all($basics, static fn(?BasicGenerator $b) => $b !== null)) {
+            $this->basic = new BasicGenerator(
+                [
+                    'type' => 'tuple',
+                    'elements' => array_map(
+                        static fn($b) => $b->schema,
+                        $basics
+                    )
+                ],
+                function(mixed $raw) use ($basics) {
+                    if (!is_array($raw)) throw new \Exception("Expected array");
+
+                    return array_map(
+                        fn(mixed $v, int $i) => $basics[$i]->parseRaw($v),
+                        $raw,
+                        range(0, count($raw) - 1),
+                    );
+                }
+            );
+        }
     }
 
     /**
@@ -39,38 +60,24 @@ class TupleGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $schema = $this->asBasic();
-        if ($schema !== null) {
-            /** @var list<T> */
-            return $testCase->generateFromSchema($schema);
+        if ($this->basic !== null) {
+            return $this->basic->draw($testCase);
         }
 
         $testCase->startSpan(SpanLabel::Tuple);
 
-        try {
-            $tuple = [];
-
-            foreach ($this->elements as $elem) {
-                $tuple[] = $testCase->draw($elem);
-            }
-
-            return $tuple;
-        } finally {
-            $testCase->stopSpan();
+        $tuple = [];
+        foreach ($this->elements as $elem) {
+            $tuple[] = $testCase->draw($elem);
         }
+
+        $testCase->stopSpan();
+        return $tuple;
     }
 
     #[\Override]
-    public function asBasic(): ?array
+    public function asBasic(): ?BasicGenerator
     {
-        $elementSchemas = array_map(static fn(Generator $elem) => $elem->asBasic(), $this->elements);
-        if (array_any($elementSchemas, static fn($elem) => $elem === null)) {
-            return null;
-        }
-
-        return [
-            'type' => 'tuple',
-            'elements' => $elementSchemas
-        ];
+        return $this->basic;
     }
 }

@@ -10,7 +10,7 @@ use Hegel\TestCase;
  * @internal Do not implement directly. Use Generators factory methods.
  * @template T
  */
-interface Generator
+abstract class Generator
 {
     /**
      * @return T
@@ -18,30 +18,46 @@ interface Generator
      * @throws \Hegel\Exception\DataExhaustedException
      * @throws \InvalidArgumentException
      */
-    public function draw(TestCase $testCase): mixed;
+    public abstract function draw(TestCase $testCase): mixed;
 
     /**
-     * @return array<string, mixed>|null
+     * @return BasicGenerator<T>|null
      */
-    public function asBasic(): ?array;
+    public function asBasic(): ?BasicGenerator{
+        return null;
+    }
 
     /**
      * @template TOut
      * @param \Closure(T): TOut $fn
      * @return Generator<TOut>
      */
-    public function map(\Closure $fn): Generator;
+    public function map(\Closure $fn): Generator {
+        return new MappedGenerator(
+            $this, $fn,
+        );
+    }
 
     /**
      * @param \Closure(T): bool $predicate
      * @return Generator<T>
      */
-    public function filter(\Closure $predicate): Generator;
+    public function filter(\Closure $predicate): Generator {
+        return new FilteredGenerator(
+            $this,
+            $predicate,
+        );
+    }
 
     /**
      * @template TOut
      * @param \Closure(T): Generator<TOut> $fn
      * @return FlatMappedGenerator<T, TOut>
      */
-    public function flatMap(\Closure $fn): Generator;
+    public function flatMap(\Closure $fn): Generator {
+        return new FlatMappedGenerator(
+            $this,
+            $fn,
+        );
+    }
 }

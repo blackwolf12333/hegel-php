@@ -9,6 +9,7 @@ enum SpanLabel: int
     case List_ = 1;
     case Set = 3;
     case Map = 5;
+    case MapEntry = 6;
     case Tuple = 7;
     case OneOf = 8;
     case Optional = 9;

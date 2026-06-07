@@ -6,16 +6,21 @@ namespace Hegel\Generator;
 
 use Hegel\Generator\Combination\DictGenerator;
 use Hegel\Generator\Combination\ListGenerator;
+use Hegel\Generator\Combination\SplObjectStorageGenerator;
 use Hegel\Generator\Combination\TupleGenerator;
+use Hegel\Generator\Composite\JustGenerator;
+use Hegel\Generator\Composite\OneOfGenerator;
+use Hegel\Generator\Composite\OptionalGenerator;
+use Hegel\Generator\Strings\DomainGenerator;
 use Hegel\SpanLabel;
 
 final class Generators
 {
     /**
-     * @return BasicGenerator<int>
+     * @return Generator<int>
      * @throws \InvalidArgumentException
      */
-    public static function integers(int $min = PHP_INT_MIN, int $max = PHP_INT_MAX): BasicGenerator
+    public static function integers(int $min = PHP_INT_MIN, int $max = PHP_INT_MAX): Generator
     {
         if ($min > $max) {
             throw new \InvalidArgumentException("min ({$min}) cannot be greater than max ({$max})");
@@ -29,9 +34,9 @@ final class Generators
     }
 
     /**
-     * @return BasicGenerator<bool>
+     * @return Generator<bool>
      */
-    public static function booleans(): BasicGenerator
+    public static function booleans(): Generator
     {
         return new BasicGenerator(['type' => 'boolean']);
     }
@@ -39,9 +44,9 @@ final class Generators
     /**
      * @param int $minSize
      * @param int|null $maxSize
-     * @return BasicGenerator<string>
+     * @return Generator<string>
      */
-    public static function text(int $minSize = 0, null|int $maxSize = null): BasicGenerator
+    public static function text(int $minSize = 0, null|int $maxSize = null): Generator
     {
         $schema = ['type' => 'string', 'min_size' => $minSize];
         if ($maxSize !== null) {
@@ -53,9 +58,9 @@ final class Generators
     /**
      * @param int $minSize
      * @param int|null $maxSize
-     * @return BasicGenerator<string>
+     * @return Generator<string>
      */
-    public static function binary(int $minSize = 0, null|int $maxSize = null): BasicGenerator
+    public static function binary(int $minSize = 0, null|int $maxSize = null): Generator
     {
         $schema = ['type' => 'binary', 'min_size' => $minSize];
         if ($maxSize !== null) {
@@ -67,20 +72,20 @@ final class Generators
     /**
      * @template T
      * @param T $value
-     * @return BasicGenerator<T>
+     * @return Generator<T>
      */
-    public static function just(mixed $value): BasicGenerator
+    public static function just(mixed $value): Generator
     {
-        return new BasicGenerator(['type' => 'constant', 'value' => $value]);
+        return new JustGenerator($value);
     }
 
     /**
      * @template T
      * @param array<int, T> $values
-     * @return BasicGenerator<T>
+     * @return Generator<T>
      * @throws \InvalidArgumentException
      */
-    public static function sampledFrom(array $values): BasicGenerator
+    public static function sampledFrom(array $values): Generator
     {
         // This is implemented as an integer generator that generates an index which we map back
         // to a value in the input array because the values could be arbitrary PHP values that we can't
@@ -125,6 +130,16 @@ final class Generators
     }
 
     /**
+     * @template T
+     * @param Generator<T> $elements
+     * @return ListGenerator<T>
+     */
+    public static function sets(Generator $elements): ListGenerator
+    {
+        return new ListGenerator($elements, unique: true);
+    }
+
+    /**
      * @template K of array-key
      * @template V
      * @param Generator<K> $keys
@@ -136,58 +151,42 @@ final class Generators
         return new DictGenerator($keys, $values);
     }
 
+    public static function splObjectStorage(Generator $keys, Generator $values): SplObjectStorageGenerator {
+        return new SplObjectStorageGenerator(
+            $keys,
+            $values
+        );
+    }
+
     /**
      * @template T
-     * @param SchemaGenerator<T> ...$elements
-     * @return TupleGenerator<T>
+     * @param Generator<T> ...$elements
+     * @return Generator<T>
      */
-    public static function tuples(SchemaGenerator ...$elements): TupleGenerator
+    public static function tuples(Generator ...$elements): Generator
     {
         return new TupleGenerator($elements);
     }
 
     /**
      * @template T
-     * @param SchemaGenerator<T> ...$generators
-     * @return BasicGenerator<T>
+     * @param Generator<T> ...$generators
+     * @return Generator<T>
      * @throws \InvalidArgumentException
      */
-    public static function oneOf(SchemaGenerator ...$generators): BasicGenerator
+    public static function oneOf(Generator ...$generators): Generator
     {
-        if ($generators === []) {
-            throw new \InvalidArgumentException('oneOf requires at least one generator');
-        }
-
-        $branches = [];
-        foreach ($generators as $gen) {
-            $branches[] = $gen->asBasic();
-        }
-
-        return new BasicGenerator(
-            schema: ['type' => 'one_of', 'generators' => $branches],
-            transform: static function (mixed $result): mixed {
-                return $result;
-            },
-            spanLabel: SpanLabel::OneOf,
-        );
+        return new OneOfGenerator(...$generators);
     }
 
     /**
      * @template T
-     * @param SchemaGenerator<T> $element
-     * @return BasicGenerator<T|null>
+     * @param Generator<T> $element
+     * @return Generator<T|null>
      */
-    public static function optional(SchemaGenerator $element): BasicGenerator
+    public static function optional(Generator $element): Generator
     {
-        return new BasicGenerator(
-            schema: [
-                'type' => 'one_of',
-                'generators' => [
-                    $element->asBasic(),
-                    ['type' => 'null'],
-                ],
-            ],
-        );
+        return new OptionalGenerator($element);
     }
 
     /**

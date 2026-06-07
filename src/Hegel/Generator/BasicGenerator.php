@@ -13,34 +13,25 @@ use Hegel\TestCase;
  * @internal
  *
  * @template T
- * @template-implements SchemaGenerator<T>
+ * @template-extends Generator<T>
  */
-final class BasicGenerator implements SchemaGenerator
+final class BasicGenerator extends Generator
 {
-    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<T> */
-    use GeneratorCombinatorsTrait {
-        map as genericMap;
-    }
-
     /**
      * @param array<string, mixed> $schema
      * @param (\Closure(mixed): T)|null $transform
      * @param SpanLabel|null $spanLabel
      */
     public function __construct(
-        private readonly array $schema,
+        public readonly array $schema,
         private readonly null|\Closure $transform = null,
         private readonly ?SpanLabel $spanLabel = null,
     ) {}
 
     #[\Override]
-    public function asBasic(): ?array
+    public function asBasic(): ?BasicGenerator
     {
-        if ($this->transform !== null) {
-            return null;
-        }
-
-        return $this->schema;
+        return $this;
     }
 
     /**
@@ -77,17 +68,17 @@ final class BasicGenerator implements SchemaGenerator
         }
     }
 
-    #[\Override]
-    public function map(Closure $fn): Generator {
-        if ($this->transform === null) {
-            return new BasicGenerator(
-                // @mago-expect analyzer:possibly-null-argument
-                // because $this->transform is null this will always have a schema
-                $this->asBasic(),
-                $fn
-            );
+    /**
+     * @param mixed $raw
+     * @return T
+     */
+    public function parseRaw(mixed $raw): mixed
+    {
+        if ($this->transform) {
+            return ($this->transform)($raw);
         }
 
-        return $this->genericMap($fn);
+        /** @var T */
+        return $raw;
     }
 }

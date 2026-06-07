@@ -15,13 +15,10 @@ use Hegel\TestCase;
  * @internal
  *
  * @template T
- * @template-implements Generator<T>
+ * @template-extends  Generator<T>
  */
-final class FilteredGenerator implements Generator
+final class FilteredGenerator extends Generator
 {
-    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<T> */
-    use GeneratorCombinatorsTrait;
-
     private const int MAX_ATTEMPTS = 3;
 
     /**
@@ -33,12 +30,6 @@ final class FilteredGenerator implements Generator
         private readonly \Closure $predicate,
     ) {}
 
-    #[\Override]
-    public function asBasic(): ?array
-    {
-        return null;
-    }
-
     /**
      * @throws AssumeRejectedException
      * @throws ConnectionException|ProtocolException
@@ -48,21 +39,17 @@ final class FilteredGenerator implements Generator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        $testCase->startSpan(SpanLabel::Filter);
-
-        try {
-            for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
-                /** @var mixed $drawn */
-                $drawn = $this->inner->draw($testCase);
-                if (($this->predicate)($drawn)) {
-                    $testCase->stopSpan();
-                    return $drawn;
-                }
+        for ($i = 0; $i < self::MAX_ATTEMPTS; $i++) {
+            $testCase->startSpan(SpanLabel::Filter);
+            /** @var mixed $drawn */
+            $drawn = $this->inner->draw($testCase);
+            if (($this->predicate)($drawn)) {
+                $testCase->stopSpan();
+                return $drawn;
             }
-        } finally {
             $testCase->discardSpan();
-            // @mago-expect lint:no-unsafe-finally
-            throw new AssumeRejectedException(sprintf('Filter rejected %d consecutive attempts', self::MAX_ATTEMPTS));
         }
+
+        throw new AssumeRejectedException(sprintf('Filter rejected %d consecutive attempts', self::MAX_ATTEMPTS));
     }
 }

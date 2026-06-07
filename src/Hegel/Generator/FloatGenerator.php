@@ -10,13 +10,10 @@ use Hegel\TestCase;
 /**
  * @internal
  *
- * @template-implements SchemaGenerator<float>
+ * @template-extends Generator<float>
  */
-final class FloatGenerator implements SchemaGenerator
+final class FloatGenerator extends Generator
 {
-    /** @use \Hegel\Generator\GeneratorCombinatorsTrait<float> */
-    use GeneratorCombinatorsTrait;
-
     public function __construct(
         private null|float $min = null,
         private null|float $max = null,
@@ -97,8 +94,7 @@ final class FloatGenerator implements SchemaGenerator
     }
 
     /** @return array<string, mixed> */
-    #[\Override]
-    public function asBasic(): array
+    private function schema(): array
     {
         $schema = ['type' => 'float'];
 
@@ -132,6 +128,6 @@ final class FloatGenerator implements SchemaGenerator
     #[\Override]
     public function draw(TestCase $testCase): mixed
     {
-        return $testCase->generateFromSchema($this->asBasic());
+        return $testCase->generateFromSchema($this->schema());
     }
 }
