@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Hegel\Wire;
 
 use Hegel\Exception\ConnectionException;
+use Hegel\Protocol\Connection;
 
 final class PacketReader
 {
@@ -108,7 +109,7 @@ final class PacketReader
                 }
 
                 $end = microtime(true);
-                if ($end - $start > 10) {
+                if ($end - $start > 10 && !getenv(Connection::HEGEL_PHP_DEBUG_CONNECTION)) {
                     throw new ConnectionException("Stream timed out, this usually indicates a bug in the protocol handling. Please report this");
                 }
 

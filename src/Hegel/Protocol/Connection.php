@@ -14,6 +14,7 @@ use Monolog\Logger;
 
 final class Connection
 {
+    const string HEGEL_PHP_DEBUG_CONNECTION = 'HEGEL_PHP_DEBUG_CONNECTION';
     /** @var int Next stream counter (streams are (counter << 1) | 1) */
     private int $nextStreamCounter = 1;
 
@@ -51,7 +52,7 @@ final class Connection
     public static function fromStreams(mixed $reader, mixed $writer): self
     {
         $logger = null;
-        if (getenv('HEGEL_PHP_DEBUG_CONNECTION')) {
+        if (getenv(self::HEGEL_PHP_DEBUG_CONNECTION)) {
             $logger = new Logger('connection');
             $logger->pushHandler(new StreamHandler('connection.log'));
         }
