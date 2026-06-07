@@ -8,7 +8,7 @@ use Hegel\Exception\ConnectionException;
 
 final class ServerProcess
 {
-    public const string HEGEL_SERVER_VERSION = '0.4.0';
+    public const string HEGEL_SERVER_VERSION = '0.9.1';
 
     /** @var resource|null */
     private mixed $process = null;
@@ -134,7 +134,7 @@ final class ServerProcess
 
         $uv = $this->findUv();
         return sprintf(
-            '%s tool run --from "hegel-core==%s" hegel --stdio --verbosity normal',
+            '%s tool run --from "hegel-core==%s" hegel --verbosity normal',
             $uv,
             self::HEGEL_SERVER_VERSION,
         );
