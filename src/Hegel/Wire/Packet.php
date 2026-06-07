@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Hegel\Wire;
 
+use Hegel\Codec\CborCodec;
+
 final readonly class Packet
 {
     public const int MAGIC = 0x4845_474C;
@@ -41,6 +43,12 @@ final readonly class Packet
 
     public function debugStreamRepresentation(): string {
         $directionIndicator = $this->isReply ? '|<' : '>|';
-        return str_pad($this->messageId . ($this->isReply ? 'R' : ''), 4) . "{$directionIndicator}  [" . str_pad($this->streamId.'', 3, pad_type: STR_PAD_LEFT) . ']-- ' . str_pad($this->payload, 100, '-');
+
+        if ($this->isCloseStream()) {
+            $payload = 'CLOSE_STREAM';
+        } else {
+            $payload = json_encode(CborCodec::decode($this->payload), flags: JSON_THROW_ON_ERROR);
+        }
+        return str_pad($this->messageId . ($this->isReply ? 'R' : ''), 4) . "{$directionIndicator}  [" . str_pad($this->streamId.'', 3, pad_type: STR_PAD_LEFT) . ']-- ' . str_pad($payload, 100, '-');
     }
 }
