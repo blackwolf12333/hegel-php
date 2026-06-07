@@ -97,7 +97,7 @@ final class PacketReader
                 if ($metadata['timed_out']) {
                     throw new ConnectionException('Stream timed out, this usually indicates a bug in the protocol handling. Please report this');
                 }
-                throw new ConnectionException(json_encode($metadata));
+                throw new ConnectionException(json_encode($metadata, flags: JSON_THROW_ON_ERROR));
             }
 
             // EOF
