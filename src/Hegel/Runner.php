@@ -82,8 +82,6 @@ final class Runner
             break;
         }
 
-        $testStream->close();
-
         return new RunResult(
             passed: $testDoneEvent->passed,
             testCases: $testDoneEvent->testCases,
