@@ -97,7 +97,6 @@ final class Generators
         return new BasicGenerator(
             schema: ['type' => 'integer', 'min_value' => 0, 'max_value' => count($values) - 1],
             transform: static fn(int $index) => $values[$index],
-            spanLabel: SpanLabel::SampledFrom,
         );
     }
 
