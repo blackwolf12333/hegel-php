@@ -8,6 +8,7 @@ use Hegel\Codec\CborCodec;
 use Hegel\Exception\ConnectionException;
 use Hegel\Exception\ProtocolException;
 use Hegel\Protocol\Command\Command;
+use Hegel\Protocol\Event\TestDoneEvent;
 use Hegel\Wire\Packet;
 
 final class Stream
@@ -256,6 +257,12 @@ final class Stream
                         throw new StopTestException();
                     }
                 }
+
+                if (array_key_exists('event', $message) && $message['event'] === 'test_done') {
+                    $this->close();
+                    throw new StopTestException();
+                }
+
                 $this->connection->dispatchPacket($packet);
                 continue;
             }

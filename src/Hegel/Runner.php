@@ -53,6 +53,7 @@ final class Runner
 
         // Event loop on test stream
         $finalErrors = [];
+        $testDoneEvent = null;
 
         while (true) {
             $received = $testStream->receiveRequest();
@@ -72,15 +73,30 @@ final class Runner
             }
 
             if ($eventName !== 'test_done') {
-                continue;
+                throw new Exception\ProtocolException("Unexpected event: $eventName");
             }
 
             $testDoneEvent = TestDoneEvent::fromArray($event);
-            $testStream->sendReply($msgId, ['result' => true]);
+            $testStream->sendReply($msgId, true);
 
-            $this->handleReplayCases($testDoneEvent->interestingTestCases, $testStream, $testFn, $noteFn, $finalErrors);
             break;
         }
+
+        if ($testDoneEvent === null) {
+            throw new Exception\ProtocolException('Test done event not received');
+        }
+
+        if ($testDoneEvent->error !== null) {
+            throw new \Exception("Server error: " . $testDoneEvent->error);
+        }
+        if ($testDoneEvent->healthCheckFailure !== null) {
+            throw new \Exception('Health check failure: ' . $testDoneEvent->healthCheckFailure);
+        }
+        if ($testDoneEvent->flaky !== null) {
+            throw new \Exception('Flaky test detected: ' . $testDoneEvent->flaky);
+        }
+
+        $this->handleReplayCases($testDoneEvent->interestingTestCases, $testStream, $testFn, $noteFn, $finalErrors);
 
         $testStream->close();
 
@@ -147,7 +163,7 @@ final class Runner
             }
 
             $event = TestCaseEvent::fromArray($replayEvent);
-            $testStream->sendReply($replayMsgId, ['result' => null]);
+            $testStream->sendReply($replayMsgId, null);
 
             $error = $this->runTestCase($event->streamId, $testFn, TestPhase::Final, $noteFn);
             if ($error !== null) {
